@@ -1,0 +1,76 @@
+{
+  "app": {
+    "settings": {
+      "video": {
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "pixelAspectRatio": 1
+      },
+      "audio": {
+        "sampleRate": 48000,
+        "channels": 2
+      },
+      "render": {
+        "codec": "h264",
+        "imageFormat": "jpeg",
+        "crf": 18
+      }
+    },
+    "installedMacros": {
+      "DashboardScreen": {
+        "label": "Dashboard",
+        "macro": {}
+      },
+      "AnimateText": {
+        "label": "Animate Text",
+        "macro": {
+          "text": "",
+          "font": "Gaegu-Bold",
+          "fontSize": 144,
+          "fontColor": "#EE4266",
+          "xPosition": "center",
+          "customX": 50,
+          "yPosition": "top",
+          "customY": 50,
+          "animation": "typewriter",
+          "duration": 2,
+          "outlineColor": "transparent",
+          "sequence": [
+            {
+              "text": "Hi, We're Benny and Suri",
+              "duration": 4
+            },
+            {
+              "text": "And we're building a tiny house in Bali Indonesia",
+              "duration": 6
+            }
+          ]
+        }
+      },
+      "AnimateImage": {
+        "label": "Animate Image",
+        "macro": {
+          "duration": 5,
+          "animation": "bounceIn",
+          "src": "",
+          "imgWidth": 650
+        }
+      },
+      "AnimateMap": {
+        "label": "Animate Map",
+        "macro": {}
+      },
+      "SyncText": {
+        "label": "Sync Text",
+        "macro": {}
+      },
+      "VFX": {
+        "label": "VFX",
+        "macro": {}
+      }
+    },
+    "lastOpenMacro": "AnimateImage"
+  },
+  "$schema": "./node_modules/json-server/schema.json"
+}
