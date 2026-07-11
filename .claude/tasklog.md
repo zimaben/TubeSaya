@@ -64,3 +64,13 @@ is filed under the RC that was in progress when it merged. Newest task within ea
   - Follow-up: Did not touch the pre-existing `kenBurns`/`panLR`/`panRL` dropdown stub options — they still have no matching `animationComponents` entries and fall through to `NoneImage` as before; out of scope for this task.
   - Follow-up: Sandbox network isolation prevented verifying in a live browser/Remotion Studio session (see project memory) — visual confirmation of the revised cover/zoom/pan behavior and the no-console-error checks across `bounceIn`/`kenBurnsPan`/none-selected still need a human pass in the app.
   - Follow-up: User confirmed in-browser that the cover-fit version is "doing exactly what I want" — zoom-out (120%→100% of cover baseline) and top-left→center pan direction are both correct as implemented, no further changes requested.
+
+### Adding Missing fonts in AnimateText Component. In the remotion/fonts/files folder there are a number of .ttf files. I would like to update the src/components/Dashboard/screens/AnimateText.jsx file to reflect those fonts
+  - Profile: Coder
+  - Branch: feature/AddFonts
+  - Passed Test: Switching the Font control in the screen UI will replace the font in Remotion
+  - Added `<option>` entries to the Font `<select>` in AnimateText.jsx for all 21 .ttf files in remotion/fonts/files (previously only 7 were listed; ABeeZee/Belgrano/Gaegu/GowunDodum families were already there).
+  - The other 13 fonts (Inter x8, MarkoOne, MochiyPopOne, PermanentMarker, Raleway x3) were not yet registered in remotion/fonts/fonts.js's `loadFont`/`FONTS` map — selecting them would have silently fallen back to sans-serif via `resolveFont`. Registered them there too (import + FONTS entry) since the Passed Test requires the swap to actually take effect in Remotion, not just appear in the dropdown.
+  - `remotion/fonts/index.js` is a dead/empty file — the real font registry consumed by the composition (`remotion/compositions/AnimateText/AnimateText.jsx`) is `remotion/fonts/fonts.js`. Left index.js untouched (out of scope).
+  - Verified `npx vite build` succeeds (src/ side compiles). Could not verify the Remotion Studio side myself — sandbox network isolation means I can't reach the dev server; needs a manual check in-browser (`pnpm run remotion:studio`, switch the Font control, confirm the AnimateText preview updates).
+  - Pre-existing bug noticed but left alone (out of scope): the Font select's fallback `value={macro.font || "Belgrano"}` doesn't match any option value (should be `"Belgrano-Regular"`).

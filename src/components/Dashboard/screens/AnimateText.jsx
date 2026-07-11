@@ -124,6 +124,21 @@ export default function AnimateText({ macro, updateMacro, settings }) {
                     <option value="Gaegu-Bold">Gaegu Bold</option>
                     <option value="Gaegu-Light">Gaegu Light</option>
                     <option value="GowunDodum-Regular">Gowun Dodum</option>
+                    <option value="Inter_18pt-Regular">Inter</option>
+                    <option value="Inter_18pt-Thin">Inter Thin</option>
+                    <option value="Inter_18pt-ExtraLight">Inter Extra Light</option>
+                    <option value="Inter_18pt-ExtraLightItalic">Inter Extra Light Italic</option>
+                    <option value="Inter_18pt-Light">Inter Light</option>
+                    <option value="Inter_18pt-Medium">Inter Medium</option>
+                    <option value="Inter_18pt-ExtraBold">Inter Extra Bold</option>
+                    <option value="Inter_18pt-Black">Inter Black</option>
+                    <option value="MarkoOne-Regular">Marko One</option>
+                    <option value="MochiyPopOne-Regular">Mochiy Pop One</option>
+                    <option value="PermanentMarker-Regular">Permanent Marker</option>
+                    <option value="Raleway-Thin">Raleway Thin</option>
+                    <option value="Raleway-Medium">Raleway Medium</option>
+                    <option value="Raleway-SemiBold">Raleway SemiBold</option>
+                    <option value="YujiSyuku-Regular">Yuji Syuku</option>
                     </select>
                 </div>
 

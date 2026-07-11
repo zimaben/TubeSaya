@@ -12,10 +12,7 @@
 - When a task is complete: report completion in the console, and add any Follow-up/Note details as sub-bullets under the existing task entry in `## In Progress`. Do NOT check the `[ ]` box, do NOT move the entry to `## Done`, and do NOT remove it from `## In Progress`. Archiving is handled exclusively by `pnpm run claude:update-tasklog`, which reads the `## In Progress` block as-is — moving or checking it yourself breaks that script.
 
 ## In Progress
-- [ ] Adding Missing fonts in AnimateText Component. In the remotion/fonts/files folder there are a number of .ttf files. I would like to update the src/components/Dashboard/screens/AnimateText.jsx file to reflect those fonts
-  - Profile: Coder
-  - Branch: feature/AddFonts
-  - Passed Test: Switching the Font control in the screen UI will replace the font in Remotion
+
 
 ## Backlog
 
