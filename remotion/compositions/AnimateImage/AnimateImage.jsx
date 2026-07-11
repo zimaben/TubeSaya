@@ -33,7 +33,12 @@ const NoneImage = ({ src, imgWidth, xPosition, customX, yPosition, customY }) =>
 };
 
 export const AnimateImage = (props) => {
-  const { animation } = props;
+  const { animation, src } = props;
+  
+  if (!src) {
+    return null; // or render a placeholder box while no image is set
+  }
+
   const AnimationComponent = animationComponents[animation] ?? NoneImage;
   return (
     <AbsoluteFill style={{ backgroundColor: "transparent" }}>

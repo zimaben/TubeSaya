@@ -1,0 +1,14 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "filesystem": {
+      "allowWrite": ["/home/you/projects/your-lamp-project"],
+      "denyRead": ["~/.ssh", "~/.aws"]
+    },
+    "network": {
+      "allowedDomains": ["api.anthropic.com", "github.com", "packagist.org"]
+    }
+  }
+}
