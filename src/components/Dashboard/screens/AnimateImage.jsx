@@ -2,10 +2,7 @@ export default function AnimateImage({ macro, updateMacro, settings }) {
 
   const animations = [
     { value: "bounceIn", label: "Bounce In" },
-    { value: "kenBurnsPan", label: "Ken Burns Pan" },
-    { value: "kenBurns", label: "Ken Burns" },
-    { value: "panLR", label: "Slow L/R Pan" },
-    { value: "panRL", label: "Slow R/L Pan" },
+    { value: "kenBurnsPan", label: "Ken Burns Pan" }
   ];
 
   const updateField = (key, value) => {
