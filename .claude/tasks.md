@@ -12,7 +12,13 @@
 - When a task is complete: report completion in the console, and add any Follow-up/Note details as sub-bullets under the existing task entry in `## In Progress`. Do NOT check the `[ ]` box, do NOT move the entry to `## Done`, and do NOT remove it from `## In Progress`. Archiving is handled exclusively by `pnpm run claude:update-tasklog`, which reads the `## In Progress` block as-is — moving or checking it yourself breaks that script.
 
 ## In Progress
-
+- [ ] Fix uploaded images not resolving in Remotion Studio (`AnimateImage`) by consolidating Remotion's public directory with Vite's. Symptom: `staticFile()` builds a URL like `http://localhost:3005/static-<hash>/uploads/TitleCard-fixed.png` that 404s, even though the same file renders fine in the main app UI via Vite. Root cause: Remotion's configured public/static directory is currently `src/assets` (seen in Studio's served HTML as `window.remotion_publicFolderExists`), while `server/upload-server.js` writes uploads to project-root `public/uploads/`, and Vite already defaults to serving `public/`. `src/assets` currently only holds a handful of unused canned SFX `.mp3` files — no other code references it. Fix: reconfigure Remotion's `publicDir` (in `remotion.config.ts` or equivalent — locate the actual `Config.setPublicDir`/equivalent call) to point at project-root `public/`, matching Vite. Move the SFX files from `src/assets` to `public/sfx/`. Do not touch font loading — confirmed to use a separate import flow, unrelated to this change. Do not change `AnimateImage.jsx`'s src-resolution logic — the fix is config-level only.
+  - Profile: Coder
+  - Branch: fix/RemotionStaticUploads
+  - Passed Test: `remotion.config.ts` (or equivalent) publicDir now points at project-root `public/`, confirmed by reading the file after the change, not just assumed.
+  - Passed Test: an image uploaded via the UI renders correctly inside Remotion Studio's preview without restarting any dev server beyond what's already required.
+  - Passed Test: SFX `.mp3` files relocated to `public/sfx/`, `src/assets` left empty (or removed if empty and nothing else references it — confirm via a quick grep before deleting).
+  - Passed Test: font loading still works unchanged — spot check by opening any composition that renders text.
 ## Backlog
 
 
