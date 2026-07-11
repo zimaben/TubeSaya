@@ -27,9 +27,16 @@ const purify = DOMPurify(window);
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const safeName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    cb(null, safeName);
+    const original = path.basename(file.originalname);
+    const ext = path.extname(original).toLowerCase();
+    const base = path.basename(original, ext).replace(/[^a-zA-Z0-9_-]/g, "_") || "upload";
+
+    let name = `${base}${ext}`;
+    let counter = 1;
+    while (fs.existsSync(path.join(uploadDir, name))) {
+      name = `${base}-${counter++}${ext}`;
+    }
+    cb(null, name);
   },
 });
 
@@ -58,6 +65,14 @@ const upload = multer({
 
 const app = express();
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 app.post("/upload", (req, res) => {
   upload.single("image")(req, res, (err) => {
     if (err) {
@@ -85,6 +100,14 @@ app.post("/upload", (req, res) => {
     }
 
     res.json({ src: `uploads/${req.file.filename}` });
+  });
+});
+
+app.delete("/upload/:filename", (req, res) => {
+  const filePath = path.join(uploadDir, path.basename(req.params.filename));
+  fs.rm(filePath, { force: true }, (err) => {
+    if (err) return res.status(500).json({ error: "Delete failed" });
+    res.json({ ok: true });
   });
 });
 
