@@ -1,0 +1,307 @@
+{
+  "src/main.jsx": {
+    "purpose": "Vite/React application entry point; mounts <App/> into the DOM root and pulls in the global stylesheet.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": ["src/index.css", "src/App.jsx", "react", "react-dom/client"],
+    "usedBy": [],
+    "sideEffects": "Mounts the React tree into document.getElementById(\"root\") via ReactDOM.createRoot(...).render(...).",
+    "gotchas": "N/A",
+    "relatedData": "N/A"
+  },
+  "src/App.jsx": {
+    "purpose": "Root application component. Loads/persists app state (settings + installedMacros) against the json-server backend at http://localhost:3001/app, tracks which macro screen is active, and lays out Sidebar/Dashboard/AppTray.",
+    "propsIn": "N/A (root component, no props)",
+    "propsOut": "N/A (top of tree; passes updateSettings/updateMacro/changeActiveMacro callbacks down to children)",
+    "dependencies": ["react (useState, useEffect)", "src/components/Sidebar/Sidebar.jsx", "src/components/Dashboard/Dashboard.jsx", "src/components/AppTray/AppTray.jsx (excluded from this index per ignore list)"],
+    "usedBy": ["src/main.jsx"],
+    "sideEffects": "GET http://localhost:3001/app on mount to load `data`. PUT http://localhost:3001/app whenever `data` changes.",
+    "gotchas": "Two separate useEffect(() => {...}, [data]) hooks both PUT the full `data` object to the backend on every change (lines ~44-54 and ~84-104) — duplicated network writes, not just one. `activeMacro` defaults from `json.lastOpenMacro || \"DashboardScreen\"`; hand-edits to db.json must use exact installedMacros keys. Backend base URL \"http://localhost:3001/app\" is hardcoded — json-server must be running on port 3001 or the app never gets past \"Loading...\".",
+    "relatedData": "db.json `app` object (`app.settings`, `app.installedMacros`, `app.lastOpenMacro`) — read whole on mount, PUT back whole on every change."
+  },
+  "src/index.css": {
+    "purpose": "Global stylesheet — imports Tailwind CSS and a Google Fonts (Inter) stylesheet, and defines the @theme custom properties (--color-cream, --font-sans) used by Tailwind v4's CSS-based theming.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": ["tailwindcss", "Google Fonts (network: fonts.googleapis.com)"],
+    "usedBy": ["src/main.jsx"],
+    "sideEffects": "Loads a remote font stylesheet from fonts.googleapis.com at runtime (in the user's browser).",
+    "gotchas": "Requires network access to fonts.googleapis.com in the browser; not reachable from inside the agent sandbox (fonts.googleapis.com is not in `.claude/settings.json`'s sandbox allowedDomains), only relevant if an agent tries to curl/verify it directly.",
+    "relatedData": "N/A"
+  },
+  "src/components/Sidebar/Sidebar.jsx": {
+    "purpose": "Left-hand navigation panel — renders the app logo, the list of installed macros (via SidebarNav), and the render-trigger footer (via SidebarFooter).",
+    "propsIn": [
+      {"name": "macros", "type": "object", "required": true, "default": "N/A", "description": "installedMacros map keyed by macro name, each {label, macro}; passed through to SidebarNav."},
+      {"name": "activeMacro", "type": "string", "required": true, "default": "N/A", "description": "Key of the currently active macro, used to highlight it."},
+      {"name": "setActiveMacro", "type": "function", "required": true, "default": "N/A", "description": "Callback invoked with a macro key to switch screens."}
+    ],
+    "propsOut": "N/A (invokes setActiveMacro prop; does not emit its own events)",
+    "dependencies": ["src/assets/imgs/logo.png", "src/components/Sidebar/comp/SidebarNav.jsx", "src/components/Sidebar/comp/SidebarFooter.jsx"],
+    "usedBy": ["src/App.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "N/A",
+    "relatedData": "db.json `app.installedMacros` (shape of the `macros` prop)."
+  },
+  "src/components/Sidebar/comp/SidebarFooter.jsx": {
+    "purpose": "Bottom-of-sidebar \"Render\" button/footer.",
+    "propsIn": "N/A",
+    "propsOut": "N/A — click handler only console.log(\"Render clicked\"); no render pipeline wired up.",
+    "dependencies": "N/A",
+    "usedBy": ["src/components/Sidebar/Sidebar.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "Render button is a stub — onClick only logs to console, does not trigger an actual Remotion render.",
+    "relatedData": "N/A"
+  },
+  "src/components/Sidebar/comp/SidebarItem.jsx": {
+    "purpose": "Single clickable row in the sidebar macro list; highlights itself when active.",
+    "propsIn": [
+      {"name": "label", "type": "string", "required": true, "default": "N/A", "description": "Display text."},
+      {"name": "active", "type": "boolean", "required": true, "default": "N/A", "description": "Whether this item is the active macro."},
+      {"name": "onClick", "type": "function", "required": true, "default": "N/A", "description": "Click handler."}
+    ],
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": ["src/components/Sidebar/comp/SidebarNav.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "Contains a large commented-out duplicate implementation of the same component (lines 23-33) — dead code left in file.",
+    "relatedData": "N/A"
+  },
+  "src/components/Sidebar/comp/SidebarNav.jsx": {
+    "purpose": "Maps installedMacros entries to a list of SidebarItem rows, skipping any macro without a label.",
+    "propsIn": [
+      {"name": "macros", "type": "object", "required": true, "default": "N/A", "description": "Same shape as Sidebar's macros prop."},
+      {"name": "activeMacro", "type": "string", "required": true, "default": "N/A", "description": "N/A"},
+      {"name": "setActiveMacro", "type": "function", "required": true, "default": "N/A", "description": "N/A"}
+    ],
+    "propsOut": "N/A",
+    "dependencies": ["src/components/Sidebar/comp/SidebarItem.jsx"],
+    "usedBy": ["src/components/Sidebar/Sidebar.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "Silently omits any macro whose `label` is falsy/missing (`macro?.label &&`) — a malformed db.json entry disappears from the nav instead of erroring.",
+    "relatedData": "db.json `app.installedMacros` (each entry must have a `label` to appear in the nav)."
+  },
+  "src/components/Dashboard/Dashboard.jsx": {
+    "purpose": "Right-hand main panel. Renders DashboardHeader and routes to the active macro's screen component based on activeMacro.",
+    "propsIn": [
+      {"name": "activeMacro", "type": "string", "required": true, "default": "N/A", "description": "Key selecting which screen to render."},
+      {"name": "settings", "type": "object", "required": true, "default": "N/A", "description": "Passed to DashboardHeader/Settings."},
+      {"name": "macro", "type": "object", "required": true, "default": "N/A", "description": "The active macro's `macro` sub-object, passed to the routed screen."},
+      {"name": "updateSettings", "type": "function", "required": true, "default": "N/A", "description": "N/A"},
+      {"name": "updateMacro", "type": "function", "required": true, "default": "N/A", "description": "Wrapped per-screen so screens call it with just the new macro payload (activeMacro is closed over)."}
+    ],
+    "propsOut": "N/A",
+    "dependencies": ["src/components/Dashboard/comp/dashheader.jsx", "src/components/Dashboard/screens/AnimateImage.jsx", "src/components/Dashboard/screens/AnimateMap.jsx", "src/components/Dashboard/screens/AnimateText.jsx", "src/components/Dashboard/screens/DashboardScreen.jsx", "src/components/Dashboard/screens/SyncText.jsx", "src/components/Dashboard/screens/VFX.jsx"],
+    "usedBy": ["src/App.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "The switch's case for the dashboard-home screen is the literal string \"Dashboard\", but the actual installedMacros key in db.json is \"DashboardScreen\" (see CLAUDE.md macro table) — that case can never match `activeMacro`, so DashboardScreen.jsx is currently unreachable via normal sidebar navigation. routeActiveScreen() returns null for any unmatched key.",
+    "relatedData": "db.json `app.installedMacros.<Name>.macro` — resolved by App.jsx and passed down as the `macro` prop."
+  },
+  "src/components/Dashboard/comp/dashheader.jsx": {
+    "purpose": "Dashboard panel header — shows a human-readable title derived from the active macro's PascalCase key, plus the Settings gear/modal trigger.",
+    "propsIn": [
+      {"name": "activeDash", "type": "string", "required": true, "default": "N/A", "description": "PascalCase macro key, converted to a spaced title via titleFromKey."},
+      {"name": "updateSettings", "type": "function", "required": true, "default": "N/A", "description": "Passed through to Settings."},
+      {"name": "settings", "type": "object", "required": true, "default": "N/A", "description": "Passed through to Settings."}
+    ],
+    "propsOut": "N/A",
+    "dependencies": ["src/components/Dashboard/comp/settings.jsx"],
+    "usedBy": ["src/components/Dashboard/Dashboard.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "titleFromKey assumes activeDash is a non-empty PascalCase string (splits on capital letters) — will throw if activeDash is undefined/null. App.jsx's \"Loading...\" gate should prevent that in normal use, but any future caller must keep that invariant.",
+    "relatedData": "N/A"
+  },
+  "src/components/Dashboard/comp/settings.jsx": {
+    "purpose": "Project-settings modal (video/audio/render config) — gear-icon button that opens an editable form seeded from `settings`, and saves via `updateSettings`.",
+    "propsIn": [
+      {"name": "settings", "type": "object", "required": true, "default": "N/A", "description": "{video, audio, render} shape — see relatedData."},
+      {"name": "updateSettings", "type": "function", "required": true, "default": "N/A", "description": "Called with the edited form on Save."}
+    ],
+    "propsOut": "Calls updateSettings(form) on Save.",
+    "dependencies": ["react (useState, useEffect)"],
+    "usedBy": ["src/components/Dashboard/comp/dashheader.jsx"],
+    "sideEffects": "N/A (persistence happens upstream in App.jsx's PUT effect once updateSettings triggers a `data` state change)",
+    "gotchas": "Local `form` state re-syncs from the `settings` prop only via useEffect on prop change, not on modal open — if `settings` changed while the modal was previously open+cancelled, stale local edits could reappear. Assumes settings.video/settings.audio/settings.render are always present (no optional chaining) — throws if any is missing.",
+    "relatedData": "db.json `app.settings` (video: {width,height,fps,pixelAspectRatio}, audio: {sampleRate,channels}, render: {codec,imageFormat,crf}). Note: the form's Codec/CRF selects don't cover `imageFormat`, so that field is never editable here despite existing in db.json."
+  },
+  "src/components/Dashboard/comp/timeline-reference.jsx": {
+    "purpose": "Non-functional Tailwind layout reference kept for copy-pasting markup into future components, per the file's own header comment — not a real, importable component.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": [],
+    "sideEffects": "N/A",
+    "gotchas": "File is NOT valid as a standalone ES module — it is a bare JSX fragment with no wrapping function/component and no export statement (starts with a comment, then a raw <div>). It cannot be imported as-is; it exists purely as copy/paste reference source. Confirmed unreferenced anywhere in the repo.",
+    "relatedData": "N/A"
+  },
+  "src/components/Dashboard/comp/two-card-reference.jsx": {
+    "purpose": "Unused Tailwind reference component (TwoCardBS) kept for copy-pasting markup into future components, per the file's own header comment.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": [],
+    "sideEffects": "N/A",
+    "gotchas": "Syntactically valid (unlike timeline-reference.jsx) but confirmed unreferenced anywhere in the repo — intentional dead code kept as a reference per its own comment.",
+    "relatedData": "N/A"
+  },
+  "src/components/Dashboard/screens/AnimateImage.jsx": {
+    "purpose": "Macro editor screen for the AnimateImage macro — image upload (base64), width, duration, and animation-style controls.",
+    "propsIn": [
+      {"name": "macro", "type": "object", "required": true, "default": "N/A", "description": "{src, imgWidth, duration, animation} — see relatedData."},
+      {"name": "updateMacro", "type": "function", "required": true, "default": "N/A", "description": "Called with the full updated macro object on any field change."},
+      {"name": "settings", "type": "object", "required": false, "default": "N/A", "description": "Accepted but never read in this component."}
+    ],
+    "propsOut": "Calls updateMacro({...macro, [key]: value}) per field edit.",
+    "dependencies": "N/A (no imports; uses native FileReader/browser APIs)",
+    "usedBy": ["src/components/Dashboard/Dashboard.jsx"],
+    "sideEffects": "Reads the selected file into memory as a base64 data URL via FileReader.readAsDataURL and stores it directly in macro.src — no upload endpoint/network call (see in-file comment about the planned upgrade path to a real upload + relative path).",
+    "gotchas": "Preview <img> is guarded with `{macro.src && (...)}` — this plain-<img> guard pattern is the one referenced by CLAUDE.md's Gotchas log for the empty-src crash fix (the actual Remotion `<Img>` crash fix lives in remotion/compositions/AnimateImage, not here). Storing base64 images directly in macro.src (and therefore in db.json) can bloat db.json for large images — no size validation on upload. `settings` prop is accepted but unused.",
+    "relatedData": "db.json `app.installedMacros.AnimateImage.macro` (src, imgWidth, duration, animation). Consumed at render time by remotion/compositions/AnimateImage/ per CLAUDE.md."
+  },
+  "src/components/Dashboard/screens/AnimateMap.jsx": {
+    "purpose": "Stub macro editor screen for the (unbuilt) AnimateMap macro.",
+    "propsIn": [
+      {"name": "macro", "type": "object", "required": false, "default": "N/A", "description": "Accepted but unused."},
+      {"name": "updateMacro", "type": "function", "required": false, "default": "N/A", "description": "Accepted but unused."}
+    ],
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": ["src/components/Dashboard/Dashboard.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "Renders only placeholder text \"Hi from AnimateMap\" — no real form/fields yet; matches \"Stub\" status in CLAUDE.md's Macros table.",
+    "relatedData": "db.json `app.installedMacros.AnimateMap.macro` (currently {})."
+  },
+  "src/components/Dashboard/screens/AnimateText.jsx": {
+    "purpose": "Macro editor screen for the AnimateText macro — text/font/color/position/animation controls, plus a multi-line \"sequence\" editor for timed text blocks.",
+    "propsIn": [
+      {"name": "macro", "type": "object", "required": true, "default": "N/A", "description": "See relatedData for full shape."},
+      {"name": "updateMacro", "type": "function", "required": true, "default": "N/A", "description": "N/A"},
+      {"name": "settings", "type": "object", "required": false, "default": "N/A", "description": "Accepted but never read."}
+    ],
+    "propsOut": "Calls updateMacro(...) (directly or via local updateField) on every field/sequence edit.",
+    "dependencies": "N/A (no imports)",
+    "usedBy": ["src/components/Dashboard/Dashboard.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "Dual-mode editing: macro.text/macro.duration act as a single-shot text block AND as the staging fields for the next line to append to macro.sequence — same fields mean two different things depending on hasSequence, non-obvious without reading the code. removeSequenceItem sets sequence: undefined (not []) when the last item is removed, deliberately dropping the key entirely — consumers must not assume macro.sequence is always an array when present. outlineColor: \"transparent\" is the sentinel for \"no outline\" — render components must check for that exact string, not just falsiness (per in-file comment). settings prop is accepted but unused.",
+    "relatedData": "db.json `app.installedMacros.AnimateText.macro` (text, font, fontSize, fontColor, xPosition, customX, yPosition, customY, animation, duration, outlineColor, sequence[]). Consumed at render time by remotion/compositions/AnimateText/ per CLAUDE.md."
+  },
+  "src/components/Dashboard/screens/DashboardScreen.jsx": {
+    "purpose": "Stub macro editor screen for the (unbuilt) DashboardScreen macro.",
+    "propsIn": [
+      {"name": "macro", "type": "object", "required": false, "default": "N/A", "description": "Accepted but unused."},
+      {"name": "updateMacro", "type": "function", "required": false, "default": "N/A", "description": "Accepted but unused."}
+    ],
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": ["src/components/Dashboard/Dashboard.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "Renders only placeholder text \"Hi from DashboardScreen\". Its intended activeMacro key is \"DashboardScreen\" (per db.json/CLAUDE.md), but Dashboard.jsx's switch matches on the literal string \"Dashboard\" — see Dashboard.jsx's gotcha. As written, this screen is unreachable through normal sidebar navigation.",
+    "relatedData": "db.json `app.installedMacros.DashboardScreen.macro` (currently {})."
+  },
+  "src/components/Dashboard/screens/SyncText.jsx": {
+    "purpose": "Stub macro editor screen for the (unbuilt) SyncText macro.",
+    "propsIn": [
+      {"name": "macro", "type": "object", "required": false, "default": "N/A", "description": "Accepted but unused."},
+      {"name": "updateMacro", "type": "function", "required": false, "default": "N/A", "description": "Accepted but unused."}
+    ],
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": ["src/components/Dashboard/Dashboard.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "Renders only placeholder text \"Hi from SyncText\" — matches \"Stub\" status in CLAUDE.md.",
+    "relatedData": "db.json `app.installedMacros.SyncText.macro` (currently {})."
+  },
+  "src/components/Dashboard/screens/VFX.jsx": {
+    "purpose": "Stub macro editor screen for the (unbuilt) VFX macro.",
+    "propsIn": [
+      {"name": "macro", "type": "object", "required": false, "default": "N/A", "description": "Accepted but unused."},
+      {"name": "updateMacro", "type": "function", "required": false, "default": "N/A", "description": "Accepted but unused."}
+    ],
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": ["src/components/Dashboard/Dashboard.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "Renders only placeholder text \"Hi from VFX\" — matches \"Stub\" status in CLAUDE.md.",
+    "relatedData": "db.json `app.installedMacros.VFX.macro` (currently {})."
+  },
+  "src/assets/imgs/logo.png": {
+    "purpose": "App logo image, rendered at the top of the Sidebar.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": ["src/components/Sidebar/Sidebar.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "N/A",
+    "relatedData": "N/A"
+  },
+  "src/assets/imgs/Gemini_Generated_Image_ro9h4uro9h4uro9h.png": {
+    "purpose": "Unreferenced image asset (AI-generated, per filename) — not imported anywhere in the codebase.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": [],
+    "sideEffects": "N/A",
+    "gotchas": "No import references found anywhere in the repo (outside node_modules) — likely leftover/orphaned from earlier design exploration.",
+    "relatedData": "N/A"
+  },
+  "src/assets/imgs/TitleCard-fixed.png": {
+    "purpose": "Unreferenced image asset — not imported anywhere in the codebase.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": [],
+    "sideEffects": "N/A",
+    "gotchas": "No import references found anywhere in the repo — orphaned asset. Filename suggests a corrected version of TitleCard.png (also unreferenced), kept alongside the original.",
+    "relatedData": "N/A"
+  },
+  "src/assets/imgs/TitleCard.png": {
+    "purpose": "Unreferenced image asset — not imported anywhere in the codebase.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": [],
+    "sideEffects": "N/A",
+    "gotchas": "No import references found anywhere in the repo — orphaned asset; see also TitleCard-fixed.png.",
+    "relatedData": "N/A"
+  },
+  "src/assets/imgs/cash-bar.png": {
+    "purpose": "Unreferenced image asset — not imported anywhere in the codebase.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": [],
+    "sideEffects": "N/A",
+    "gotchas": "No import references found anywhere in the repo — orphaned asset.",
+    "relatedData": "N/A"
+  },
+  "src/assets/imgs/progress-bar-three.png": {
+    "purpose": "Unreferenced image asset — not imported anywhere in the codebase.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": [],
+    "sideEffects": "N/A",
+    "gotchas": "No import references found anywhere in the repo — orphaned asset.",
+    "relatedData": "N/A"
+  },
+  "src/assets/imgs/progress-bar-two.png": {
+    "purpose": "Unreferenced image asset — not imported anywhere in the codebase.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": [],
+    "sideEffects": "N/A",
+    "gotchas": "No import references found anywhere in the repo — orphaned asset.",
+    "relatedData": "N/A"
+  },
+  "src/assets/typewriter.mp3": {
+    "purpose": "Unreferenced audio asset — presumably intended as a typewriter sound effect for AnimateText's \"typewriter\" animation, but not currently imported/referenced anywhere.",
+    "propsIn": "N/A",
+    "propsOut": "N/A",
+    "dependencies": "N/A",
+    "usedBy": [],
+    "sideEffects": "N/A",
+    "gotchas": "No import references found anywhere in the repo. The \"typewriter\" animation option exists in AnimateText.jsx's animation list and is db.json's current default animation for AnimateText, but this audio file is not wired into any component or the Remotion composition yet.",
+    "relatedData": "Naming suggests intended pairing with app.installedMacros.AnimateText.macro.animation === \"typewriter\" in db.json, but no code path currently references it."
+  }
+}

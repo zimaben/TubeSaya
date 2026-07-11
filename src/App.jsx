@@ -20,7 +20,7 @@ export default function App() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetch("http://localhost:3001/app");
+        const response = await fetch("http://localhost:3000/app");
 
         if (!response.ok) {
           throw new Error("Failed to load data");
@@ -44,7 +44,7 @@ export default function App() {
     useEffect(() => {
     if (!data) return;
     const saveData = async () => {
-      await fetch("http://localhost:3001/app", {
+      await fetch("http://localhost:3000/app", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -88,7 +88,7 @@ export default function App() {
 
     const saveData = async () => {
       try {
-        await fetch("http://localhost:3001/app", {
+        await fetch("http://localhost:3000/app", {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
