@@ -1,3 +1,5 @@
+{ /* THIS FILE IS JUST A REFERENCE SO I CAN MAKE SIMILAR TAILWIND COMPONENTS IN THEFUTURE */}
+
 export default function TwoCardBS(){
     return(
                 <div className="grid grid-cols-2 gap-4">

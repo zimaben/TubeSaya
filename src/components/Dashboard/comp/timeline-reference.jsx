@@ -1,3 +1,4 @@
+{ /* THIS FILE IS JUST A TAILWIND REFERENCE OF HOW THE DEMO WAS DONE SO I CAN MAKE FUTURE COMPONENTS */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-[#2A2118]">Active Tasks</h3>
