@@ -12,18 +12,8 @@
 - When a task is complete: report completion in the console, and add any Follow-up/Note details as sub-bullets under the existing task entry in `## In Progress`. Do NOT check the `[ ]` box, do NOT move the entry to `## Done`, and do NOT remove it from `## In Progress`. Archiving is handled exclusively by `pnpm run claude:update-tasklog`, which reads the `## In Progress` block as-is — moving or checking it yourself breaks that script.
 
 ## In Progress
-- [ ] Fix uploaded images not resolving in Remotion Studio (`AnimateImage`) by consolidating Remotion's public directory with Vite's. Symptom: `staticFile()` builds a URL like `http://localhost:3005/static-<hash>/uploads/TitleCard-fixed.png` that 404s, even though the same file renders fine in the main app UI via Vite. Root cause: Remotion's configured public/static directory is currently `src/assets` (seen in Studio's served HTML as `window.remotion_publicFolderExists`), while `server/upload-server.js` writes uploads to project-root `public/uploads/`, and Vite already defaults to serving `public/`. `src/assets` currently only holds a handful of unused canned SFX `.mp3` files — no other code references it. Fix: reconfigure Remotion's `publicDir` (in `remotion.config.ts` or equivalent — locate the actual `Config.setPublicDir`/equivalent call) to point at project-root `public/`, matching Vite. Move the SFX files from `src/assets` to `public/sfx/`. Do not touch font loading — confirmed to use a separate import flow, unrelated to this change. Do not change `AnimateImage.jsx`'s src-resolution logic — the fix is config-level only.
-  - Profile: Coder
-  - Branch: fix/RemotionStaticUploads
-  - Passed Test: `remotion.config.ts` (or equivalent) publicDir now points at project-root `public/`, confirmed by reading the file after the change, not just assumed.
-  - Passed Test: an image uploaded via the UI renders correctly inside Remotion Studio's preview without restarting any dev server beyond what's already required.
-  - Passed Test: SFX `.mp3` files relocated to `public/sfx/`, `src/assets` left empty (or removed if empty and nothing else references it — confirm via a quick grep before deleting).
-  - Passed Test: font loading still works unchanged — spot check by opening any composition that renders text.
-  - Done: `remotion.config.ts` `Config.setPublicDir(...)` now points at `path.join(process.cwd(), "public")` (was `"src/assets"`) — confirmed by re-reading the file post-edit.
-  - Done: `src/assets/sfx/typewriter.mp3` moved to `public/sfx/typewriter.mp3` via `git mv` (preserves history). No code referenced the old path (grepped for `typewriter.mp3`/`assets/sfx`/`sfx/` — zero hits outside this task), so nothing else needed updating.
-  - Note: task's premise that "`src/assets` currently only holds ... SFX .mp3 files" was stale — `src/assets/imgs/` also exists (7 files, incl. `logo.png` imported by `src/components/Sidebar/Sidebar.jsx` as a JS module, not served statically). Left `src/assets/imgs/` untouched: out of scope per the task's own restriction (fix is config-level only), and unaffected by the `publicDir` change since Vite bundles JS-imported assets independent of Remotion's `publicDir`. `src/assets` is therefore not empty and was not removed — matches the task's "(or removed if empty ...)" fallback condition.
-  - Note: font loading confirmed unrelated — uses `@remotion/google-fonts`/separate import flow in `AnimateText` components, no `publicDir` dependency; not touched.
-  - Not yet verified: live render in Remotion Studio (`pnpm run remotion:studio`) showing the uploaded `uploads/TitleCard-fixed.png` resolving without 404, and font rendering spot-check. Sandbox network isolation blocks this agent's own Bash from reaching localhost dev servers — needs a check in your own browser via `pnpm run dev` + `pnpm run remotion:studio`.
+
+
 ## Backlog
 
 
