@@ -10,18 +10,16 @@
 - `.claude/index.src.json` is a centralized, single-file index of every file in `src/` — purpose, props, dependencies, usedBy, gotchas. Once it exists: consult it first for context on a file before reading that file (or its neighbors) directly. Only fall back to reading actual source when the index is missing an entry, looks stale, or the task requires seeing exact implementation details the index wouldn't capture. Keep it updated as a Librarian task whenever Coder work adds, removes, or meaningfully changes a file in `src/`.
 
 ## In Progress
-
+- [ ] Build local file-upload system to replace base64 data-encode flow for AnimateImage. Add `express`+`multer`+`dompurify`+`jsdom` deps (already present in package.json). New `server/upload-server.js` (already exists, port 3001): POST `/upload` (multipart, field `image`, 25MB cap, image types incl. SVG). SVG uploads are sanitized server-side via DOMPurify before being written to disk — never trust raw uploaded SVG markup. Writes to `public/uploads/`, returns `{ src: "uploads/<filename>" }`. Update the actual image upload UI component to POST to `http://localhost:3001/upload` and write the returned `src` into `db.json` (via json-server's REST API at `http://localhost:3000/app`, not direct file write) under `app.installedMacros.AnimateImage.macro.src`. Confirm `public/uploads/*` is in `.gitignore` (keep `.gitkeep`).
+  - Profile: Coder
+  - Branch: feature/AddImgUpload
+  - Note: `server/upload-server.js` and CORS-related port config (json-server :3000, upload-server :3001, Remotion Studio :3005) were resolved in a prior session — verify all three still start cleanly via `pnpm dev` before beginning.
+  - Passed Test: uploading a JPEG/PNG/WebP/GIF via the UI results in a new file in `public/uploads/` and an updated `src` value in `db.json` pointing to it (relative path, not a `data:` URI).
+  - Passed Test: uploading an SVG results in sanitized markup on disk (no `<script>` tags or `on*` handlers survive) and the same `src`-in-`db.json` behavior as raster images.
+  - Passed Test: Remotion Studio renders the uploaded image via `staticFile()` with no `<Img>` src error.
+  - Passed Test: uploading an unsupported file type (e.g. `.pdf`) is rejected with a clear error, not silently accepted or crashing the server.
 
 ## Backlog
 
 
 ## Done
-- [x] Generate `.claude/index.src.json` — one centralized file covering every file in `src/`, keyed by relative path, so future sessions can consult this index instead of reading the whole codebase. Ignore `components/AppTray/*`. Each entry: purpose, propsIn (name/type/required/default/description), propsOut/emits, dependencies, usedBy (reverse dependency — requires full-tree import scan, not per-file), sideEffects, gotchas, relatedData (db.json schema link where applicable).
-  - Profile: Librarian
-  - Branch: docs/AddIndex
-  - Pass 1: analyzed each of the 26 non-AppTray files individually (purpose/propsIn/propsOut/emits/dependencies/sideEffects/gotchas/relatedData), "N/A" for empty propsIn/propsOut.
-  - Pass 2: ran a single import-graph scan (`grep ^import` across `src/`, cross-checked against db.json) to backfill `usedBy` for every entry, including `[]` for genuinely unreferenced files (e.g. the two `*-reference.jsx` files and most of `src/assets/imgs/*`, which turned out to be orphaned).
-  - Verified: file exists, all 26 expected keys present (matches `find src -type f` minus AppTray), every entry has non-empty purpose/propsIn/propsOut, every `usedBy` is an explicit array.
-  - Note: along the way, fixed `.claude/settings.json` sandbox config (`denyRead` referenced a nonexistent `~/.aws`, which crashed bwrap and blocked all Bash) — user applied the `allowWrite` path fix, this session removed the dead `~/.aws` deny entry.
-- [x] Fix empty `src` crash on `<Img>` when no image uploaded yet (AnimateImage.jsx)
-  - Profile: Coder

@@ -9,7 +9,8 @@
   "preview": "vite preview",
   "remotion:studio": "pnpm exec remotion studio remotion/index.jsx --port 3005",
   "render": "node remotion/render.js",
-  "claude:tasks": "bash .claude/claude-tasks.sh"
+  "claude:tasks": "bash .claude/claude-tasks.sh",
+  "claude:update-tasklog": "node server/scripts/update-tasklog.js"
 },
   "keywords": [],
   "author": "",
