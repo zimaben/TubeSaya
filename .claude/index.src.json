@@ -91,7 +91,7 @@
       {"name": "updateMacro", "type": "function", "required": true, "default": "N/A", "description": "Wrapped per-screen so screens call it with just the new macro payload (activeMacro is closed over)."}
     ],
     "propsOut": "N/A",
-    "dependencies": ["src/components/Dashboard/comp/dashheader.jsx", "src/components/Dashboard/screens/AnimateImage.jsx", "src/components/Dashboard/screens/AnimateMap.jsx", "src/components/Dashboard/screens/AnimateText.jsx", "src/components/Dashboard/screens/DashboardScreen.jsx", "src/components/Dashboard/screens/SyncText.jsx", "src/components/Dashboard/screens/VFX.jsx"],
+    "dependencies": ["src/components/Dashboard/comp/dashheader.jsx", "src/components/Dashboard/screens/AnimateImage.jsx", "src/components/Dashboard/screens/AnimateMap.jsx", "src/components/Dashboard/screens/AnimateText.jsx", "src/components/Dashboard/screens/DashboardScreen.jsx", "src/components/Dashboard/screens/MarkerText.jsx", "src/components/Dashboard/screens/SyncText.jsx", "src/components/Dashboard/screens/VFX.jsx"],
     "usedBy": ["src/App.jsx"],
     "sideEffects": "N/A",
     "gotchas": "The switch's case for the dashboard-home screen is the literal string \"Dashboard\", but the actual installedMacros key in db.json is \"DashboardScreen\" (see CLAUDE.md macro table) — that case can never match `activeMacro`, so DashboardScreen.jsx is currently unreachable via normal sidebar navigation. routeActiveScreen() returns null for any unmatched key.",
@@ -184,6 +184,19 @@
     "sideEffects": "N/A",
     "gotchas": "Dual-mode editing: macro.text/macro.duration act as a single-shot text block AND as the staging fields for the next line to append to macro.sequence — same fields mean two different things depending on hasSequence, non-obvious without reading the code. removeSequenceItem sets sequence: undefined (not []) when the last item is removed, deliberately dropping the key entirely — consumers must not assume macro.sequence is always an array when present. outlineColor: \"transparent\" is the sentinel for \"no outline\" — render components must check for that exact string, not just falsiness (per in-file comment). settings prop is accepted but unused.",
     "relatedData": "db.json `app.installedMacros.AnimateText.macro` (text, font, fontSize, fontColor, xPosition, customX, yPosition, customY, animation, duration, outlineColor, sequence[]). Consumed at render time by remotion/compositions/AnimateText/ per CLAUDE.md."
+  },
+  "src/components/Dashboard/screens/MarkerText.jsx": {
+    "purpose": "Macro editor screen for the MarkerText macro — text, single shared color (drives both the circle and the text), font size, skew, total duration, and circle controls (draw duration, size, top/left position).",
+    "propsIn": [
+      {"name": "macro", "type": "object", "required": true, "default": "N/A", "description": "{text, fontSize, color, skew, duration, circleDuration, circleSize, circleTop, circleLeft} — see relatedData."},
+      {"name": "updateMacro", "type": "function", "required": true, "default": "N/A", "description": "Called with the full updated macro object on any field change."}
+    ],
+    "propsOut": "Calls updateMacro({...macro, [key]: value}) per field edit.",
+    "dependencies": "N/A (no imports)",
+    "usedBy": ["src/components/Dashboard/Dashboard.jsx"],
+    "sideEffects": "N/A",
+    "gotchas": "`text` has no fallback below the macro-object level — the render side (remotion/compositions/MarkerText/MarkerTypewriter.jsx) does `[...text]` with no guard, so a macro with `text` missing/undefined (not just empty string) will crash the composition. The db.json seed for this macro must always include a defined `text` string. `color` is shared by both the circle stroke and the text (no separate text/circle color fields) — matches the composition's single-color prop.",
+    "relatedData": "db.json `app.installedMacros.MarkerText.macro` (text, fontSize, color, skew, duration, circleDuration, circleSize, circleTop, circleLeft). Consumed at render time by remotion/compositions/MarkerText/MarkerText.jsx per CLAUDE.md."
   },
   "src/components/Dashboard/screens/DashboardScreen.jsx": {
     "purpose": "Stub macro editor screen for the (unbuilt) DashboardScreen macro.",

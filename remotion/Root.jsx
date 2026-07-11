@@ -3,6 +3,7 @@
 import { Composition, staticFile } from "remotion";
 import { AnimateText } from "./compositions/AnimateText/AnimateText";
 import { AnimateImage } from "./compositions/AnimateImage/AnimateImage";
+import { MarkerText } from "./compositions/MarkerText/MarkerText";
 import "./fonts";
 import db from "../db.json";
 
@@ -13,7 +14,6 @@ import db from "../db.json";
 const DEV_OVERRIDE_MACRO_ID = null; // e.g. "AnimateText"
 const LOCAL_OVERRIDE_PROPS = {
   text: "testing a new look",
-  font: "Gaegu-Bold",
   fontSize: 144,
   fontColor: "#EE4266",
   xPosition: "center",
@@ -29,6 +29,7 @@ const { width, height, fps } = settings.video;
 const COMPONENT_MAP = {
   AnimateText,
   AnimateImage,
+  MarkerText,
 };
 
 const getProps = (macroId) => {

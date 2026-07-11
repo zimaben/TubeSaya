@@ -24,6 +24,7 @@ Status as of last db.json review — update when a stub gets implemented.
 |---|---|---|
 | AnimateText | `remotion/compositions/AnimateText/` | Built — supports typewriter animation, single text or `sequence[]` of timed text blocks |
 | AnimateImage | `remotion/compositions/AnimateImage/` | Built — `bounceIn` animation implemented; guards against empty `src` (see Gotchas log) |
+| MarkerText | `remotion/compositions/MarkerText/` | Built — hand-drawn draw-on circle (`MarkerCircle.jsx`) + marker-styled typewriter reveal (`MarkerTypewriter.jsx`), composed by `MarkerText.jsx`; circle draws first, text starts once it finishes |
 | DashboardScreen | — | Stub — `macro: {}` in db.json, no component yet |
 | AnimateMap | — | Stub — `macro: {}` in db.json, no component yet |
 | SyncText | — | Stub — `macro: {}` in db.json, no component yet |

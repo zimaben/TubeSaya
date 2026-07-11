@@ -20,6 +20,8 @@
   - Passed Test: both components render correctly when swapped in via `DEV_OVERRIDE_MACRO_ID` in Root.jsx, independent of any macro/UI wiring.
   - Passed Test: MarkerCircle's draw-on animates over its full duration (not instant, not looping oddly) and is sized relative to `settings.video.width/height`, not hardcoded pixels.
   - Passed Test: text with `skew` applied doesn't clip/overflow its fit-to-box sizing — skew is applied without breaking the fit calculation.
+  - Follow-up (2026-07-12): scope extended past the original "no macro wiring yet" — components are now finalized (circle uses a true circular-arc bezier construction with a uniform spiral drift + slight overshoot at the close; see MarkerCircle.jsx) and macro-wired: `src/components/Dashboard/screens/MarkerText.jsx` added (editor screen), wired into `Dashboard.jsx`, `remotion/Root.jsx`'s `DEV_OVERRIDE_MACRO_ID` reset to `null` (tuning done, `MarkerText` stays registered in `COMPONENT_MAP`), `CLAUDE.md` macro table and `.claude/index.src.json` updated.
+  - Follow-up (2026-07-12): per standing instruction not to write `db.json` directly, the `installedMacros.MarkerText` entry was NOT added by Claude — user needs to add it themselves (snippet given in chat) before the macro will appear in the Sidebar or be reachable in the app.
 
 
 ## Backlog

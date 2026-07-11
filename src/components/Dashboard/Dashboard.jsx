@@ -4,6 +4,7 @@ import AnimateImage from "./screens/AnimateImage";
 import AnimateMap from "./screens/AnimateMap";
 import AnimateText from "./screens/AnimateText";
 import DashboardScreen from "./screens/DashboardScreen";
+import MarkerText from "./screens/MarkerText";
 import SyncText from "./screens/SyncText";
 import VFX from "./screens/VFX";
 
@@ -15,6 +16,7 @@ export default function Dashboard({ activeMacro, settings, macro, updateSettings
     switch(activeMacro){
       case "AnimateText" : return <AnimateText macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } settings={settings} />
       case "AnimateImage" : return <AnimateImage macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } />
+      case "MarkerText" : return <MarkerText macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } />
       case "AnimateMap" : return <AnimateMap macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } />
       case "Dashboard" : return <DashboardScreen macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } />
       case "VFX" : return <VFX macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } />
