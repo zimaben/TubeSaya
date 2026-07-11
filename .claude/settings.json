@@ -4,8 +4,8 @@
     "failIfUnavailable": true,
     "allowUnsandboxedCommands": false,
     "filesystem": {
-      "allowWrite": ["/home/you/projects/your-lamp-project"],
-      "denyRead": ["~/.ssh", "~/.aws"]
+      "allowWrite": ["/home/ben/projects/software/TubeSaya"],
+      "denyRead": ["~/.ssh"]
     },
     "network": {
       "allowedDomains": ["api.anthropic.com", "github.com", "packagist.org"]
