@@ -10,7 +10,8 @@
     "api": "json-server --watch db.json --port 3001",
     "start": "concurrently \"pnpm run dev\" \"pnpm run api\"",
     "remotion:studio": "pnpm exec remotion studio remotion/index.jsx",
-    "render": "node remotion/render.js"
+    "render": "node remotion/render.js",
+    "claude:tasks": "bash .claude/claude-tasks.sh"
   },
   "keywords": [],
   "author": "",
