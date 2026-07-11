@@ -19,6 +19,11 @@
   - Passed Test: an image uploaded via the UI renders correctly inside Remotion Studio's preview without restarting any dev server beyond what's already required.
   - Passed Test: SFX `.mp3` files relocated to `public/sfx/`, `src/assets` left empty (or removed if empty and nothing else references it — confirm via a quick grep before deleting).
   - Passed Test: font loading still works unchanged — spot check by opening any composition that renders text.
+  - Done: `remotion.config.ts` `Config.setPublicDir(...)` now points at `path.join(process.cwd(), "public")` (was `"src/assets"`) — confirmed by re-reading the file post-edit.
+  - Done: `src/assets/sfx/typewriter.mp3` moved to `public/sfx/typewriter.mp3` via `git mv` (preserves history). No code referenced the old path (grepped for `typewriter.mp3`/`assets/sfx`/`sfx/` — zero hits outside this task), so nothing else needed updating.
+  - Note: task's premise that "`src/assets` currently only holds ... SFX .mp3 files" was stale — `src/assets/imgs/` also exists (7 files, incl. `logo.png` imported by `src/components/Sidebar/Sidebar.jsx` as a JS module, not served statically). Left `src/assets/imgs/` untouched: out of scope per the task's own restriction (fix is config-level only), and unaffected by the `publicDir` change since Vite bundles JS-imported assets independent of Remotion's `publicDir`. `src/assets` is therefore not empty and was not removed — matches the task's "(or removed if empty ...)" fallback condition.
+  - Note: font loading confirmed unrelated — uses `@remotion/google-fonts`/separate import flow in `AnimateText` components, no `publicDir` dependency; not touched.
+  - Not yet verified: live render in Remotion Studio (`pnpm run remotion:studio`) showing the uploaded `uploads/TitleCard-fixed.png` resolving without 404, and font rendering spot-check. Sandbox network isolation blocks this agent's own Bash from reaching localhost dev servers — needs a check in your own browser via `pnpm run dev` + `pnpm run remotion:studio`.
 ## Backlog
 
 
