@@ -2,9 +2,11 @@
 
 import { AbsoluteFill } from "remotion";
 import { BounceInImage } from "./animations/BounceInImage";
+import { KenBurnsPan } from "./animations/KenBurnsPan";
 
 const animationComponents = {
   bounceIn: BounceInImage,
+  kenBurnsPan: KenBurnsPan,
   // fadeIn: FadeInImage,   ← future
   // slideInLeft: SlideInLeftImage, ← future
 };

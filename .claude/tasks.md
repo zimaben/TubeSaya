@@ -9,19 +9,21 @@
 
 - `.claude/index.src.json` is a centralized, single-file index of every file in `src/` — purpose, props, dependencies, usedBy, gotchas. Once it exists: consult it first for context on a file before reading that file (or its neighbors) directly. Only fall back to reading actual source when the index is missing an entry, looks stale, or the task requires seeing exact implementation details the index wouldn't capture. Keep it updated as a Librarian task whenever Coder work adds, removes, or meaningfully changes a file in `src/`.
 
-## In Progress
+- When a task is complete: report completion in the console, and add any Follow-up/Note details as sub-bullets under the existing task entry in `## In Progress`. Do NOT check the `[ ]` box, do NOT move the entry to `## Done`, and do NOT remove it from `## In Progress`. Archiving is handled exclusively by `pnpm run claude:update-tasklog`, which reads the `## In Progress` block as-is — moving or checking it yourself breaks that script.
 
+## In Progress
+- [ ] Create a Screen in src/components/Dashboard/Screens for DashboardScreen.jsx that correspondes to the remotion/compositions/DashboardScreen.jsx props. The props should save to db.json the same way all the other Macros do
+  - Profile: Coder
+  - Branch: feature/AddDash
+  - Passed Test: The App updates db.json.app.installedMacros.DashboardScreen on screen update of the props.
+  - Passed Test: Setting the ActiveMacro to DashboardScreen with correct props causes localhost:3005/DashboardScreen to load in Remotion Studio with no errors
+  - Follow-up: `Dashboard.jsx`'s routeActiveScreen switch matched on the literal string `"Dashboard"` instead of `"DashboardScreen"`, so the screen was unreachable via sidebar nav — fixed as part of this task (1-line change).
+  - Follow-up: Built out `src/components/Dashboard/screens/DashboardScreen.jsx` (was a placeholder) with fields for graphic_size, graphic_placement_x, graphic_placement_y, budget, spent, increment — matching `remotion/compositions/DashboardScreen/DashboardScreen.jsx` prop names, following the existing updateField/updateMacro pattern from AnimateImage.jsx/MarkerText.jsx.
+  - Follow-up: `db.json` was intentionally left untouched (macro stays `{}` until the app itself writes through the new form) per the no-direct-db.json-writes rule.
+  - Follow-up: Verified with `npx vite build` (succeeds). Could not verify Remotion Studio load directly — sandbox network blocks `remotion.media` (Chrome headless download); needs a manual check in the user's browser at localhost:3005/DashboardScreen.
+  - Follow-up: `.claude/index.src.json` entries for `Dashboard.jsx` and `DashboardScreen.jsx` (screens) are now stale (still describe the old bug/stub) — needs a Librarian pass.
 
 ## Backlog
 
 
 ## Done
-- [x] Generate `.claude/index.src.json` — one centralized file covering every file in `src/`, keyed by relative path, so future sessions can consult this index instead of reading the whole codebase. Ignore `components/AppTray/*`. Each entry: purpose, propsIn (name/type/required/default/description), propsOut/emits, dependencies, usedBy (reverse dependency — requires full-tree import scan, not per-file), sideEffects, gotchas, relatedData (db.json schema link where applicable).
-  - Profile: Librarian
-  - Branch: docs/AddIndex
-  - Pass 1: analyzed each of the 26 non-AppTray files individually (purpose/propsIn/propsOut/emits/dependencies/sideEffects/gotchas/relatedData), "N/A" for empty propsIn/propsOut.
-  - Pass 2: ran a single import-graph scan (`grep ^import` across `src/`, cross-checked against db.json) to backfill `usedBy` for every entry, including `[]` for genuinely unreferenced files (e.g. the two `*-reference.jsx` files and most of `src/assets/imgs/*`, which turned out to be orphaned).
-  - Verified: file exists, all 26 expected keys present (matches `find src -type f` minus AppTray), every entry has non-empty purpose/propsIn/propsOut, every `usedBy` is an explicit array.
-  - Note: along the way, fixed `.claude/settings.json` sandbox config (`denyRead` referenced a nonexistent `~/.aws`, which crashed bwrap and blocked all Bash) — user applied the `allowWrite` path fix, this session removed the dead `~/.aws` deny entry.
-- [x] Fix empty `src` crash on `<Img>` when no image uploaded yet (AnimateImage.jsx)
-  - Profile: Coder

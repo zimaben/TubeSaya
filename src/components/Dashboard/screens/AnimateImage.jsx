@@ -2,9 +2,7 @@ export default function AnimateImage({ macro, updateMacro, settings }) {
 
   const animations = [
     { value: "bounceIn", label: "Bounce In" },
-    { value: "kenBurns", label: "Ken Burns" },
-    { value: "panLR", label: "Slow L/R Pan" },
-    { value: "panRL", label: "Slow R/L Pan" },
+    { value: "kenBurnsPan", label: "Ken Burns Pan" }
   ];
 
   const updateField = (key, value) => {
@@ -14,19 +12,33 @@ export default function AnimateImage({ macro, updateMacro, settings }) {
     });
   };
 
-  // Reads the uploaded file into a base64 data URL and stores it directly
-  // in macro.src. Self-contained for now — no upload endpoint needed.
-  // Upgrade path: swap this for an actual upload call that saves the file
-  // to src/assets/imgs/ and stores the relative path string instead.
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      updateField("src", reader.result);
-    };
-    reader.readAsDataURL(file);
+    const previousSrc = macro.src;
+    if (previousSrc) updateField("src", "");
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const response = await fetch("http://localhost:3001/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      alert(result.error || "Upload failed");
+      return;
+    }
+
+    updateField("src", result.src);
+
+    if (previousSrc && !previousSrc.startsWith("data:")) {
+      const filename = previousSrc.replace(/^uploads\//, "");
+      fetch(`http://localhost:3001/upload/${filename}`, { method: "DELETE" }).catch(() => {});
+    }
   };
 
   return (

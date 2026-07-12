@@ -36,16 +36,7 @@
           "animation": "typewriter",
           "duration": 2,
           "outlineColor": "transparent",
-          "sequence": [
-            {
-              "text": "Hi, We're Benny and Suri",
-              "duration": 4
-            },
-            {
-              "text": "And we're building a tiny house in Bali Indonesia",
-              "duration": 6
-            }
-          ]
+          "sequence": []
         }
       },
       "AnimateImage": {
@@ -53,7 +44,7 @@
         "macro": {
           "duration": 5,
           "animation": "bounceIn",
-          "src": "",
+          "src": "uploads/TitleCard-fixed.png",
           "imgWidth": 650
         }
       },
