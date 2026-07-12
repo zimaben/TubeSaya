@@ -61,30 +61,3 @@ export const resolveFont = (fontName) => {
   return FONTS[fontName] ? fontName : "sans-serif";
 };
 
-
-// import { loadFont } from "@remotion/fonts";
-
-// const FONT_NAMES = [
-//   "ABeeZee-Regular",
-//   "ABeeZee-Italic",
-//   "Belgrano-Regular",
-//   "Gaegu-Regular",
-//   "Gaegu-Bold",
-//   "Gaegu-Light",
-//   "GowunDodum-Regular",
-// ];
-
-// export const FONTS = {};
-
-// FONT_NAMES.forEach((fontName) => {
-//   loadFont({
-//     family: fontName,
-//     url: new URL(`./files/${fontName}.ttf`, import.meta.url).href,
-//   });
-
-//   FONTS[fontName] = fontName;
-// });
-
-// export const resolveFont = (fontName) => {
-//   return FONTS[fontName] || "sans-serif";
-// };
