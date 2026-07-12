@@ -17,6 +17,11 @@
   - Branch: feature/AddDash
   - Passed Test: The App updates db.json.app.installedMacros.DashboardScreen on screen update of the props.
   - Passed Test: Setting the ActiveMacro to DashboardScreen with correct props causes localhost:3005/DashboardScreen to load in Remotion Studio with no errors
+  - Follow-up: `Dashboard.jsx`'s routeActiveScreen switch matched on the literal string `"Dashboard"` instead of `"DashboardScreen"`, so the screen was unreachable via sidebar nav — fixed as part of this task (1-line change).
+  - Follow-up: Built out `src/components/Dashboard/screens/DashboardScreen.jsx` (was a placeholder) with fields for graphic_size, graphic_placement_x, graphic_placement_y, budget, spent, increment — matching `remotion/compositions/DashboardScreen/DashboardScreen.jsx` prop names, following the existing updateField/updateMacro pattern from AnimateImage.jsx/MarkerText.jsx.
+  - Follow-up: `db.json` was intentionally left untouched (macro stays `{}` until the app itself writes through the new form) per the no-direct-db.json-writes rule.
+  - Follow-up: Verified with `npx vite build` (succeeds). Could not verify Remotion Studio load directly — sandbox network blocks `remotion.media` (Chrome headless download); needs a manual check in the user's browser at localhost:3005/DashboardScreen.
+  - Follow-up: `.claude/index.src.json` entries for `Dashboard.jsx` and `DashboardScreen.jsx` (screens) are now stale (still describe the old bug/stub) — needs a Librarian pass.
 
 ## Backlog
 
