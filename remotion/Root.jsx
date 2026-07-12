@@ -12,10 +12,10 @@ import db from "../db.json";
 // While tuning a new animation/prop combo in Studio, set this to the macro
 // id you're working on to substitute LOCAL_OVERRIDE_PROPS in place of the
 // live db.json macro. Set to null for normal behavior (always reflect db.json).
-const DEV_OVERRIDE_MACRO_ID = "DashboardScreen"; // e.g. "DashboardScreen"
+const DEV_OVERRIDE_MACRO_ID = null; // e.g. "DashboardScreen"
 const LOCAL_OVERRIDE_PROPS = {
   graphic_size: 30,
-  graphic_placement_x: "right",
+  graphic_placement_x: "left",
   graphic_placement_y: "top",
   budget: 50000,
   spent: 1200,
