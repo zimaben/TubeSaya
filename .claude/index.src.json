@@ -94,7 +94,7 @@
     "dependencies": ["src/components/Dashboard/comp/dashheader.jsx", "src/components/Dashboard/screens/AnimateImage.jsx", "src/components/Dashboard/screens/AnimateMap.jsx", "src/components/Dashboard/screens/AnimateText.jsx", "src/components/Dashboard/screens/DashboardScreen.jsx", "src/components/Dashboard/screens/MarkerText.jsx", "src/components/Dashboard/screens/SyncText.jsx", "src/components/Dashboard/screens/VFX.jsx"],
     "usedBy": ["src/App.jsx"],
     "sideEffects": "N/A",
-    "gotchas": "The switch's case for the dashboard-home screen is the literal string \"Dashboard\", but the actual installedMacros key in db.json is \"DashboardScreen\" (see CLAUDE.md macro table) — that case can never match `activeMacro`, so DashboardScreen.jsx is currently unreachable via normal sidebar navigation. routeActiveScreen() returns null for any unmatched key.",
+    "gotchas": "routeActiveScreen()'s case for the dashboard-home screen now correctly matches the literal string \"DashboardScreen\" (the installedMacros key in db.json, per CLAUDE.md's macro table) — previously it matched the literal string \"Dashboard\" instead and DashboardScreen.jsx was unreachable via sidebar navigation; that mismatch is fixed. routeActiveScreen() still returns null for any unmatched activeMacro key.",
     "relatedData": "db.json `app.installedMacros.<Name>.macro` — resolved by App.jsx and passed down as the `macro` prop."
   },
   "src/components/Dashboard/comp/dashheader.jsx": {
@@ -199,17 +199,17 @@
     "relatedData": "db.json `app.installedMacros.MarkerText.macro` (text, fontSize, color, skew, duration, circleDuration, circleSize, circleTop, circleLeft). Consumed at render time by remotion/compositions/MarkerText/MarkerText.jsx per CLAUDE.md."
   },
   "src/components/Dashboard/screens/DashboardScreen.jsx": {
-    "purpose": "Stub macro editor screen for the (unbuilt) DashboardScreen macro.",
+    "purpose": "Macro editor screen for the DashboardScreen macro — graphic size (%) and X/Y placement controls, plus a Budget/Spent/Increment counter group. Field names and shape mirror remotion/compositions/DashboardScreen/DashboardScreen.jsx's props exactly.",
     "propsIn": [
-      {"name": "macro", "type": "object", "required": false, "default": "N/A", "description": "Accepted but unused."},
-      {"name": "updateMacro", "type": "function", "required": false, "default": "N/A", "description": "Accepted but unused."}
+      {"name": "macro", "type": "object", "required": true, "default": "N/A", "description": "{graphic_size, graphic_placement_x, graphic_placement_y, budget, spent, increment} — see relatedData. Each field falls back to a UI-only default via `??` when absent from macro (graphic_size: 30, graphic_placement_x: \"right\", graphic_placement_y: \"top\", budget/spent/increment: 0), matching the composition's own defaultProps — but the fallback is display-only and isn't written back to macro/db.json until the user edits that field."},
+      {"name": "updateMacro", "type": "function", "required": true, "default": "N/A", "description": "Called via local updateField(key, value) with the full updated macro object on any field change — same pattern as AnimateImage.jsx/MarkerText.jsx."}
     ],
-    "propsOut": "N/A",
-    "dependencies": "N/A",
+    "propsOut": "Calls updateMacro({...macro, [key]: value}) per field edit.",
+    "dependencies": "N/A (no imports)",
     "usedBy": ["src/components/Dashboard/Dashboard.jsx"],
     "sideEffects": "N/A",
-    "gotchas": "Renders only placeholder text \"Hi from DashboardScreen\". Its intended activeMacro key is \"DashboardScreen\" (per db.json/CLAUDE.md), but Dashboard.jsx's switch matches on the literal string \"Dashboard\" — see Dashboard.jsx's gotcha. As written, this screen is unreachable through normal sidebar navigation.",
-    "relatedData": "db.json `app.installedMacros.DashboardScreen.macro` (currently {})."
+    "gotchas": "graphic_placement_x's option values are \"left\"/\"center\"/\"right\" (not \"middle\", despite that wording sometimes used in task descriptions) — matches the composition's ternary, which treats anything other than \"left\"/\"right\" as centered. The current db.json seed for this macro (app.installedMacros.DashboardScreen.macro) only sets budget/spent/increment — graphic_size/graphic_placement_x/graphic_placement_y are absent and rely entirely on this component's `??` defaults until a user touches those fields in the UI. No numeric bounds are enforced in JS beyond the inputs' HTML min/max attributes (e.g. graphic_size min=1/max=100 isn't clamped), so a programmatic/db.json value outside that range would still render as-is. Dashboard.jsx's switch now correctly routes activeMacro \"DashboardScreen\" here (see Dashboard.jsx's gotcha for the fixed history) — this screen is reachable via normal sidebar navigation.",
+    "relatedData": "db.json `app.installedMacros.DashboardScreen.macro` (graphic_size, graphic_placement_x, graphic_placement_y, budget, spent, increment). Consumed at render time by remotion/compositions/DashboardScreen/DashboardScreen.jsx per CLAUDE.md."
   },
   "src/components/Dashboard/screens/SyncText.jsx": {
     "purpose": "Stub macro editor screen for the (unbuilt) SyncText macro.",
