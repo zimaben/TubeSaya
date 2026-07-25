@@ -143,3 +143,12 @@ is filed under the RC that was in progress when it merged. Newest task within ea
   - Follow-up: `.claude/index.src.json` entries for `Dashboard.jsx` and `DashboardScreen.jsx` (screens) are now stale (still describe the old bug/stub) — needs a Librarian pass.
   - Profile: Coder
   - Branch: feature/AddDash
+
+### Update the .claude/index.src.json entries for Dashboard.jsx and DashboardScreen.jsx to describe the new files. Previously it was a stub
+
+  - Profile: Librarian
+  - Branch: feature/AddDash
+  - Done: `src/components/Dashboard/screens/DashboardScreen.jsx` entry rewritten from "Stub ... placeholder text" to describe the real form (graphic_size, graphic_placement_x, graphic_placement_y, budget, spent, increment fields matching `remotion/compositions/DashboardScreen/DashboardScreen.jsx`'s props exactly, via the standard `updateField`/`updateMacro` pattern). `relatedData` updated from "(currently {})" to the real macro shape.
+  - Done: `src/components/Dashboard/Dashboard.jsx` entry's `gotchas` updated — the previously-documented "Dashboard" vs "DashboardScreen" switch-case mismatch (which made the screen unreachable) is fixed in the current code; entry now reflects that DashboardScreen is reachable via normal sidebar nav.
+  - Note: new gotcha recorded on the DashboardScreen.jsx entry — `graphic_placement_x`'s option values are "left"/"center"/"right" (not "middle"), and the current db.json seed only sets budget/spent/increment, so graphic_size/placement fields rely entirely on the screen's `??` defaults until a user touches them in the UI.
+  - Verified: `.claude/index.src.json` re-parses as valid JSON after the edits (`python3 -m json.load`).
