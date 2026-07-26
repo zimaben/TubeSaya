@@ -152,3 +152,49 @@ is filed under the RC that was in progress when it merged. Newest task within ea
   - Done: `src/components/Dashboard/Dashboard.jsx` entry's `gotchas` updated — the previously-documented "Dashboard" vs "DashboardScreen" switch-case mismatch (which made the screen unreachable) is fixed in the current code; entry now reflects that DashboardScreen is reachable via normal sidebar nav.
   - Note: new gotcha recorded on the DashboardScreen.jsx entry — `graphic_placement_x`'s option values are "left"/"center"/"right" (not "middle"), and the current db.json seed only sets budget/spent/increment, so graphic_size/placement fields rely entirely on the screen's `??` defaults until a user touches them in the UI.
   - Verified: `.claude/index.src.json` re-parses as valid JSON after the edits (`python3 -m json.load`).
+
+- [ ] You must fix this error first to assist with testing before any other work on this branch can proceed.
+
+Error encountered when rendering via Remotion Studio UI:
+
+Error: Failed to launch the browser process!
+Error: Closed with 127 signal: null
+    at ChildProcess.<anonymous> (/home/ben/projects/software/TubeSaya/node_modules/.pnpm/@remotion+renderer@4.0.484_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@remotion/renderer/dist/browser/BrowserRunner.js:260:32)
+    at ChildProcess.emit (node:events:524:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+/home/ben/projects/software/TubeSaya/node_modules/.remotion/chrome-headless-shell/linux64/chrome-headless-shell-linux64/chrome-headless-shell: error while loading shared libraries: libnspr4.so: cannot open shared object file: No such file or directory
+Troubleshooting: https://remotion.dev/docs/troubleshooting/browser-launch
+    at onClose (/home/ben/projects/software/TubeSaya/node_modules/.pnpm/@remotion+renderer@4.0.484_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@remotion/renderer/dist/browser/BrowserRunner.js:269:20)
+    at ChildProcess.<anonymous> (/home/ben/projects/software/TubeSaya/node_modules/.pnpm/@remotion+renderer@4.0.484_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@remotion/renderer/dist/browser/BrowserRunner.js:260:24)
+    at ChildProcess.emit (node:events:524:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+Node.js v20.20.2
+
+Root cause: The bundled Chrome Headless Shell (via @remotion/renderer) cannot start because the system is missing required shared libraries (NSPR/NSS and related). This is a missing OS-level dependency, not a code defect.
+
+Fix steps:
+
+bash
+sudo apt-get update
+sudo apt-get install -y libnspr4 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+  libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 \
+  libxfixes3 libxrandr2 libgbm1 libasound2
+
+Or, if Playwright is present in the project:
+
+bash
+npx playwright install-deps
+
+Verification: Re-run the Remotion Studio render and confirm the browser process launches without error.
+
+Follow-up: If this environment is containerized/CI-driven, add the dependency install step to the Dockerfile/CI setup so this doesn't recur.
+
+Reference: https://remotion.dev/docs/troubleshooting/browser-launch
+
+Profile: Coder
+Branch: feature/PreviewRender
+
+- Resolved. Root cause confirmed: `libnspr4`/`libnss3` and related shared libs were missing (verified via `ldconfig -p`).
+- On this OS (Ubuntu 24.04 / WSL2), several package names in the original fix list have been renamed with a `t64` suffix (64-bit time_t transition): use `libatk1.0-0t64`, `libatk-bridge2.0-0t64`, `libcups2t64`, `libasound2t64` in place of the non-t64 names, which have no install candidate.
+- Gotcha for anyone rerunning this: `apt-get install pkg1 pkg2 ...` resolves the whole list before installing anything — one unresolvable name (e.g. old `libasound2`) aborts the entire transaction silently, so it can look like the install "ran" but nothing actually got installed. Re-run with corrected names if the error persists identically after a first attempt.
+- Verified fixed via a successful Remotion Studio render after installing the corrected package list.
