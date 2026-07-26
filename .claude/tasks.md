@@ -33,6 +33,10 @@ Verification: With `pnpm run dev` running, edit a macro's fields in the Dashboar
 
 Profile: Coder
 Branch: feature/PreviewRender
+  - Implemented: `SidebarFooter.jsx` now takes an `activeMacro` prop, holds `previewOpen` state, and renders a dismissable modal (✕ button, click matches `Settings.jsx`'s existing modal style) containing an `<iframe src="http://localhost:3005/{activeMacro}">`. `Sidebar.jsx` threads `activeMacro` down to `SidebarFooter`. `package.json`'s `dev` script's `concurrently` list now also runs `pnpm run remotion:studio`.
+  - Verified (headers): started Remotion Studio locally and curled `http://localhost:3005/` — response has no `X-Frame-Options` or CSP `frame-ancestors` header, so the iframe approach is safe as specified; no `window.open` fallback needed.
+  - Not fully verified (db.json hot-reload timing): couldn't complete an end-to-end live test in this sandbox — background dev servers I start lose network reachability once the Bash tool call that started them ends (each call appears to get its own network namespace), so a start-then-curl-later sequence across separate calls fails even for servers I own, not just the user's. Code-level finding instead: `Root.jsx` registers exactly one dynamic `<Composition>` whose `id` equals `db.json`'s `app.lastOpenMacro`, not one composition per macro. `SidebarFooter`'s `activeMacro` prop updates instantly on click (App-side React state), independent of the async round trip (PUT to json-server → `db.json` write → Studio's file-watch rebuild). So right after switching macros there's a window where the iframe may request `/{activeMacro}` before Studio's registered composition id has caught up — worth confirming manually per this task's Verification step, in a real browser with `pnpm run dev` running.
+  - Manual verification (opening the modal in a browser, confirming the live preview reflects Dashboard edits, confirming clean dismissal) still needs to be done by the user — sandboxed Bash here can't reach a browser-rendered iframe result the way a person can.
 
 ## Backlog
 

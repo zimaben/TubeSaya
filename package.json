@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
 "scripts": {
-  "dev": "concurrently \"vite\" \"json-server --watch db.json --port 3000\" \"node server/upload-server.js\"",
+  "dev": "concurrently \"vite\" \"json-server --watch db.json --port 3000\" \"node server/upload-server.js\" \"pnpm run remotion:studio\"",
   "build": "vite build",
   "preview": "vite preview",
   "remotion:studio": "pnpm exec remotion studio remotion/index.jsx --port 3005",
