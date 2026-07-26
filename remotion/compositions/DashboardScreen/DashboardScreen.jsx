@@ -7,8 +7,9 @@ import chingSfx from "../../sfx/cash-register-ching.mp3";
 
 const FONT = "Gluten-Bold";
 
-const LEAD_IN_SECONDS = 0.5; // frame 0 -> midpoint: counter counts up, popup appears
-const POPUP_TOTAL_SECONDS = 1.8; // frame 0 -> popup fully transparent
+const START_DELAY_SECONDS = 0.05; // static beat before any animation begins, so frame 0 doesn't read as already-moving
+const LEAD_IN_SECONDS = 0.5; // start-delay -> midpoint: counter counts up, popup appears
+const POPUP_TOTAL_SECONDS = 1.8; // start-delay -> popup fully transparent
 // Measured directly from the file (122 CBR MPEG1-L3 frames x 1152 samples /
 // 44100Hz sample rate) since no ffprobe/mutagen was available to ask at build
 // time — not a guess. Re-measure if the sfx file is ever swapped.
@@ -34,11 +35,12 @@ const POPUP_RESERVE_CHARS = 7; // rough "+$X,XXX" width budget so placement math
 const CHAR_WIDTH_EM = 0.62; // average glyph width for this font, in units of its own font-size
 
 export const getDashboardDurationInFrames = (fps) => {
+  const startDelayFrames = Math.round(START_DELAY_SECONDS * fps);
   const leadInFrames = Math.round(LEAD_IN_SECONDS * fps);
   const popupTotalFrames = Math.round(POPUP_TOTAL_SECONDS * fps);
   const chingFrames = Math.ceil(CHING_DURATION_SECONDS * fps);
   const tailFrames = Math.max(popupTotalFrames - leadInFrames, chingFrames);
-  return leadInFrames + tailFrames;
+  return startDelayFrames + leadInFrames + tailFrames;
 };
 
 const formatMoney = (value) => `$${Math.round(value).toLocaleString()}`;
@@ -63,8 +65,12 @@ export const DashboardScreen = ({
   const frame = useCurrentFrame();
   const { width, fps } = useVideoConfig();
 
+  const startDelayFrames = Math.round(START_DELAY_SECONDS * fps);
   const leadInFrames = Math.round(LEAD_IN_SECONDS * fps);
   const popupTotalFrames = Math.round(POPUP_TOTAL_SECONDS * fps);
+  // All animation math below is expressed relative to the start-delay beat,
+  // not raw playhead frame — clamped at 0 so nothing runs backwards during it.
+  const effectiveFrame = Math.max(0, frame - startDelayFrames);
 
   const graphicWidthPx = width * (graphic_size / 100);
   const fontSizePx = graphicWidthPx * FONT_SCALE;
@@ -89,24 +95,25 @@ export const DashboardScreen = ({
   const translateX = graphic_placement_x === "left" ? "0%" : graphic_placement_x === "right" ? "-100%" : "-50%";
   const translateY = graphic_placement_y === "top" ? "0%" : graphic_placement_y === "bottom" ? "-100%" : "-50%";
 
-  const spentNow = interpolate(frame, [0, leadInFrames], [spent, spent + increment], {
+  const spentNow = interpolate(effectiveFrame, [0, leadInFrames], [spent, spent + increment], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
-  // Position eases with a touch of overshoot (bounce); opacity fades on a
+  // Popup stays hidden until the counter finishes climbing (leadInFrames),
+  // then eases in with a touch of overshoot (bounce) and fades out on a
   // plain ease-out so it doesn't flicker as the overshoot settles.
-  const popupDragProgress = interpolate(frame, [0, popupTotalFrames], [0, 1], {
+  const popupDragProgress = interpolate(effectiveFrame, [leadInFrames, popupTotalFrames], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.back(1.4)),
   });
-  const popupFadeProgress = interpolate(frame, [0, popupTotalFrames], [0, 1], {
+  const popupFadeProgress = interpolate(effectiveFrame, [leadInFrames, popupTotalFrames], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.ease),
   });
-  const popupOpacity = 1 - popupFadeProgress;
+  const popupOpacity = effectiveFrame < leadInFrames ? 0 : 1 - popupFadeProgress;
   const popupTranslateY = -popupDragPx * popupDragProgress;
 
   return (
@@ -145,7 +152,7 @@ export const DashboardScreen = ({
           </div>
         </div>
       </div>
-      <Sequence from={leadInFrames} layout="none">
+      <Sequence from={startDelayFrames + leadInFrames} layout="none">
         <Audio src={chingSfx} />
       </Sequence>
     </AbsoluteFill>

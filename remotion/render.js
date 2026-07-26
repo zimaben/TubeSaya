@@ -41,19 +41,17 @@ fs.mkdirSync(outDir, { recursive: true });
 //   { type: "video" }
 //   { type: "still", frame: <number> | "last", suffix?: <appended to filename> }
 //
-// Example for a macro like DashboardScreen, which needs its start frame and
-// end frame exported as PNGs (to composite back into a static graphic)
-// alongside the animated video — do not enable until that task is actually
-// scheduled, see render-notes.md:
-//
-// const RENDER_PROFILES = {
-//   DashboardScreen: [
-//     { type: "still", frame: 0, suffix: "-start" },
-//     { type: "video" },
-//     { type: "still", frame: "last", suffix: "-end" },
-//   ],
-// };
-const RENDER_PROFILES = {};
+// DashboardScreen needs its pre-animation and post-animation frames exported
+// as PNGs (to composite back into a static graphic later) alongside the
+// animated video. Video first so `outputs[0]` (surfaced today as the single
+// `output` field) stays the video, matching every other macro's behavior.
+const RENDER_PROFILES = {
+  DashboardScreen: [
+    { type: "video" },
+    { type: "still", frame: 0, suffix: "_first" },
+    { type: "still", frame: "last", suffix: "_last" },
+  ],
+};
 
 const steps = RENDER_PROFILES[compositionId] ?? [{ type: "video" }];
 
