@@ -12,33 +12,23 @@
 - When a task is complete: report completion in the console, and add any Follow-up/Note details as sub-bullets under the existing task entry in `## In Progress`. Do NOT check the `[ ]` box, do NOT move the entry to `## Done`, and do NOT remove it from `## In Progress`. Archiving is handled exclusively by `pnpm run claude:update-tasklog`, which reads the `## In Progress` block as-is — moving or checking it yourself breaks that script.
 
 ## In Progress
+- [ ] Update `DashboardScreen`'s render flow to export its first and last frames as `{filename}_first.png` / `{filename}_last.png` alongside the animated video — so the graphic's pre- and post-animation states can be composited back into a static asset later.
 
-- [ ] Add Preview/Render functionality to the Sidebar "Render" button (`src/components/Sidebar/comp/SidebarFooter.jsx`), replacing the current `console.log("Render clicked")` stub.
+  Register a `DashboardScreen` entry in `RENDER_PROFILES` (`remotion/render.js`) using the step pipeline already built for this — read `remotion/render-notes.md` first, it covers the step-shape contract, why steps shell out to the `remotion` CLI instead of the raw Node renderer API (config parity for `publicDir`/`pixelFormat`/`proResProfile`/`imageFormat`), and the known perf tradeoff (each step re-bundles independently). Three steps: a first-frame still (`frame: 0`, `suffix: "_first"`), the video, and a last-frame still (`frame: "last"`, `suffix: "_last"`).
 
-Scope: Preview only (live Remotion Studio composition for the active macro, shown in a dismissable modal). Actual file-rendering (invoking a real render pipeline to produce an output video) is explicitly out of scope for this ticket — the `render` npm script points at `remotion/render.js`, which does not exist yet and needs its own ticket (output path, progress reporting, codec/CRF from `db.json app.settings.render`).
+  Note: `render.js` currently has a *commented-out* `DashboardScreen` example using `-start`/`-end` suffixes — that was illustrative only, not a spec. This ticket's real suffixes are `_first`/`_last` (matches this ticket's title, not the placeholder). Replace that comment with the real entry rather than leaving both namings in the file.
 
-Behavior:
-- Clicking the button opens a dismissable modal containing an `<iframe>` pointed at `http://localhost:3005/{activeMacro}` — Remotion Studio's deep-link route for a specific composition.
-- `{activeMacro}` is the currently active macro key, already held in `App.jsx` state and passed to `Sidebar.jsx` as the `activeMacro` prop — thread it down to `SidebarFooter.jsx` as a new prop (`Sidebar.jsx` currently renders `<SidebarFooter />` with no props). This mirrors `db.json app.lastOpenMacro`, so no separate fetch is needed.
-- No manual prop/settings wiring is needed beyond passing the macro key: `remotion/Root.jsx` already resolves `props` from `db.json app.installedMacros.{key}.macro` and `settings` (width/height/fps) from `db.json app.settings.video` when Studio loads that composition id.
+  Since `POST /render`'s `output` field is `outputs[0]` (the current single-file UI's success message reads only that one), consider step order carefully: `[video, first-still, last-still]` keeps `output` pointing at the video (today's behavior for every other macro) rather than surprising the existing UI with a PNG path. Not mandatory — flag whatever order is chosen and why.
 
-Prerequisite: Remotion Studio must be running on port 3005 for the iframe to load. Add it to the `dev` script's `concurrently` list in `package.json` (reuse the existing `remotion:studio` script rather than duplicating the command) so it starts automatically with `pnpm run dev`.
-
-Things to verify while implementing:
-- Confirm Remotion Studio's dev server doesn't send `X-Frame-Options`/CSP `frame-ancestors` headers that would block iframe embedding — if it does, fall back to `window.open` for the preview instead of an iframe, and note that in this entry.
-- `remotion/Root.jsx`'s `DEV_OVERRIDE_MACRO_ID` (currently `null`) substitutes a different macro's props when set — if left non-null during local tuning, the embedded preview will silently show the override macro instead of the actual active one. Not this ticket's bug to fix, just a sharp edge to be aware of when testing.
-- `db.json` is imported statically in `Root.jsx` (`import db from "../db.json"`) — confirm Studio's bundler hot-reloads on `db.json` changes so the preview reflects live prop edits without a manual Studio restart; record the finding as a gotcha either way.
-
-Verification: With `pnpm run dev` running, edit a macro's fields in the Dashboard, click Render in the sidebar, and confirm the modal opens showing that macro's live Remotion Studio preview reflecting current `db.json` state; confirm the modal dismisses cleanly.
-
-Profile: Coder
-Branch: feature/PreviewRender
-  - Implemented: `SidebarFooter.jsx` now takes an `activeMacro` prop, holds `previewOpen` state, and renders a dismissable modal (✕ button, click matches `Settings.jsx`'s existing modal style) containing an `<iframe src="http://localhost:3005/{activeMacro}">`. `Sidebar.jsx` threads `activeMacro` down to `SidebarFooter`. `package.json`'s `dev` script's `concurrently` list now also runs `pnpm run remotion:studio`.
-  - Verified (headers): started Remotion Studio locally and curled `http://localhost:3005/` — response has no `X-Frame-Options` or CSP `frame-ancestors` header, so the iframe approach is safe as specified; no `window.open` fallback needed.
-  - Not fully verified (db.json hot-reload timing): couldn't complete an end-to-end live test in this sandbox — background dev servers I start lose network reachability once the Bash tool call that started them ends (each call appears to get its own network namespace), so a start-then-curl-later sequence across separate calls fails even for servers I own, not just the user's. Code-level finding instead: `Root.jsx` registers exactly one dynamic `<Composition>` whose `id` equals `db.json`'s `app.lastOpenMacro`, not one composition per macro. `SidebarFooter`'s `activeMacro` prop updates instantly on click (App-side React state), independent of the async round trip (PUT to json-server → `db.json` write → Studio's file-watch rebuild). So right after switching macros there's a window where the iframe may request `/{activeMacro}` before Studio's registered composition id has caught up — worth confirming manually per this task's Verification step, in a real browser with `pnpm run dev` running.
-  - Manual verification (opening the modal in a browser, confirming the live preview reflects Dashboard edits, confirming clean dismissal) still needs to be done by the user — sandboxed Bash here can't reach a browser-rendered iframe result the way a person can.
+  - Profile: Coder
+  - Branch: feature/DashboardRenderFlow
+  - Passed Test: with `DashboardScreen` active and a chosen filename, clicking Render produces exactly three files in `out/`: `{filename}.{mov|mp4}`, `{filename}_first.png`, `{filename}_last.png`.
+  - Passed Test: `{filename}_first.png` matches the composition's true frame 0 (pre-animation — no counter progress, no popup).
+  - Passed Test: `{filename}_last.png` matches the composition's true final frame (post-fade — popup fully transparent), not the midpoint. See the `DashboardScreen` build history in `.claude/tasklog.md` (RC/1.0.2) for the midpoint-vs-final distinction the original build already established — don't confuse the two.
+  - Passed Test: rendering any other macro (e.g. `AnimateText`) is unaffected — still produces exactly one video file in `out/`, no stray PNGs.
+  - Passed Test: `POST /render`'s `outputs` array contains all three relative paths, in the chosen step order; confirmed by reading the actual response, not just checking files landed on disk.
+  - Out of scope (per prior conversation — flag, don't silently expand): updating `SidebarFooter.jsx`'s Render modal UI to show/link all three outputs instead of just the one `output` path. `render-notes.md` already documents this as separate, not-yet-scheduled work.
 
 ## Backlog
-
 
 ## Done
