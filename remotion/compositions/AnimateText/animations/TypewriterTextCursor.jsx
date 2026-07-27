@@ -41,9 +41,9 @@ export const TypewriterTextCursor = ({
     xPosition === "custom"
       ? `${customX}%`
       : xPosition === "left"
-      ? "0%"
+      ? `${EDGE_MARGIN_PERCENT}%`
       : xPosition === "right"
-      ? "100%"
+      ? `${100 - EDGE_MARGIN_PERCENT}%`
       : "50%"; // center
   const top =
     yPosition === "custom"
