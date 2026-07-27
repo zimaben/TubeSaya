@@ -94,6 +94,24 @@ export default function MarkerText({ macro, updateMacro }) {
                 </div>
             </div>
 
+            {/* Text Position */}
+            <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#B07D4A] mb-2">
+                    Text Position
+                </label>
+
+                <select
+                    value={macro.textPosition ?? "above"}
+                    onChange={(e) => updateField("textPosition", e.target.value)}
+                    className="w-full px-3 py-2 border border-[#CBE9F2] rounded-lg text-sm outline-none focus:border-[#09ACEC]"
+                >
+                    <option value="above">Above</option>
+                    <option value="below">Below</option>
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
+
             {/* Duration */}
             <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#B07D4A] mb-2">

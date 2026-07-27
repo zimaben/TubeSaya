@@ -15,7 +15,21 @@ const EDGE_MARGIN_PERCENT = 5;
 
 const MARKER_FONT = "PermanentMarker-Regular"; // this component's visual identity is fixed to the marker font, not user-selectable
 
-export const MarkerTypewriter = ({ text, fontSize = 120, color = "#1E1E1E", skew = -6, top = 50 }) => {
+// "start"/"center"/"end" picks which edge (or center) of the text box lands
+// on the given top/left point — lets text grow away from the circle instead
+// of into it, independently on each axis.
+const ANCHOR_TRANSLATE = { start: "0%", center: "-50%", end: "-100%" };
+
+export const MarkerTypewriter = ({
+  text,
+  fontSize = 120,
+  color = "#1E1E1E",
+  skew = -6,
+  top = 50,
+  left = 50,
+  alignX = "center",
+  alignY = "center",
+}) => {
   const frame = useCurrentFrame();
   const { fps, width } = useVideoConfig();
   const letters = [...text];
@@ -39,8 +53,8 @@ export const MarkerTypewriter = ({ text, fontSize = 120, color = "#1E1E1E", skew
       style={{
         position: "absolute",
         top: `${top}%`,
-        left: "50%",
-        transform: `translate(-50%, -50%) skewX(${skew}deg)`,
+        left: `${left}%`,
+        transform: `translate(${ANCHOR_TRANSLATE[alignX]}, ${ANCHOR_TRANSLATE[alignY]}) skewX(${skew}deg)`,
         display: "flex",
         flexWrap: "nowrap",
       }}
