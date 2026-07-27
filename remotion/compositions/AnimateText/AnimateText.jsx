@@ -36,6 +36,7 @@ const NoneText = ({
   fontSize,
   fontColor,
   outlineColor,
+  outlineWidth,
   xPosition,
   customX,
   yPosition,
@@ -68,7 +69,7 @@ const NoneText = ({
           color: fontColor,
           WebkitTextStroke:
             outlineColor && outlineColor !== "transparent"
-              ? `2px ${outlineColor}`
+              ? `${outlineWidth ?? 2}px ${outlineColor}`
               : "",
         }}
       >

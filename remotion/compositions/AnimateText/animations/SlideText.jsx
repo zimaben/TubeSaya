@@ -20,6 +20,7 @@ const SlideTextBase = ({
   fontSize,
   fontColor,
   outlineColor,
+  outlineWidth,
   xPosition,
   customX,
   yPosition,
@@ -83,7 +84,7 @@ const SlideTextBase = ({
         fontSize: fittedFontSize,
         color: fontColor,
         WebkitTextStroke:
-          outlineColor && outlineColor !== "transparent" ? `2px ${outlineColor}` : "",
+          outlineColor && outlineColor !== "transparent" ? `${outlineWidth ?? 2}px ${outlineColor}` : "",
         whiteSpace: "pre",
       }}
     >

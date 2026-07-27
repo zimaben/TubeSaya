@@ -9,6 +9,8 @@ import GaeguRegular from "./files/Gaegu-Regular.ttf";
 import GaeguBold from "./files/Gaegu-Bold.ttf";
 import GaeguLight from "./files/Gaegu-Light.ttf";
 import GlutenBold from "./files/Gluten-Bold.ttf";
+import GlutenExtraLight from "./files/Gluten-ExtraLight.ttf";
+import GlutenLight from "./files/Gluten-Light.ttf";
 import GowunDodumRegular from "./files/GowunDodum-Regular.ttf";
 import YujiSyukuRegular from "./files/YujiSyuku-Regular.ttf";
 import InterBlack from "./files/Inter_18pt-Black.ttf";
@@ -34,6 +36,8 @@ const FONTS = {
   "Gaegu-Bold": GaeguBold,
   "Gaegu-Light": GaeguLight,
   "Gluten-Bold": GlutenBold,
+  "Gluten-ExtraLight": GlutenExtraLight,
+  "Gluten-Light": GlutenLight,
   "GowunDodum-Regular": GowunDodumRegular,
   "YujiSyuku-Regular": YujiSyukuRegular,
   "Inter_18pt-Black": InterBlack,

@@ -15,6 +15,7 @@ export const PopText = ({
   fontSize,
   fontColor,
   outlineColor,
+  outlineWidth,
   xPosition,
   customX,
   yPosition,
@@ -64,7 +65,7 @@ export const PopText = ({
         fontSize: fittedFontSize,
         color: fontColor,
         WebkitTextStroke:
-          outlineColor && outlineColor !== "transparent" ? `2px ${outlineColor}` : "",
+          outlineColor && outlineColor !== "transparent" ? `${outlineWidth ?? 2}px ${outlineColor}` : "",
         whiteSpace: "pre",
       }}
     >

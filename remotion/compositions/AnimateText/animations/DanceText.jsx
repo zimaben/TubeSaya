@@ -16,6 +16,7 @@ export const DanceText = ({
   fontSize,
   fontColor,
   outlineColor,
+  outlineWidth,
   xPosition,
   customX,
   yPosition,
@@ -103,7 +104,7 @@ const top =
               color: fontColor,
               WebkitTextStroke:
                 outlineColor && outlineColor !== "transparent"
-                  ? `2px ${outlineColor}`
+                  ? `${outlineWidth ?? 2}px ${outlineColor}`
                   : "",
               transform: `translateY(${translateY}px) rotate(${rotate}deg)`,
               whiteSpace: "pre",
