@@ -4,7 +4,7 @@ import { useCurrentFrame, useVideoConfig, interpolate } from "remotion";
 
 const VIEWBOX = 100; // normalized path coordinate space; the <svg> stretches it to actual (elliptical) render size via width/height + preserveAspectRatio="none"
 const STROKE_WIDTH = 4; // viewBox units — scales proportionally with the rendered SVG size, never a fixed pixel value
-const WIDTH_FACTOR = 1.35; // ellipse: rendered wider than tall
+export const WIDTH_FACTOR = 1.35; // ellipse: rendered wider than tall — exported so MarkerText.jsx can compute the circle's true horizontal extent for text placement
 
 const CENTER = 50;
 const RADIUS = 46;

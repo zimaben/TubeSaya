@@ -12,18 +12,16 @@
 - When a task is complete: report completion in the console, and add any Follow-up/Note details as sub-bullets under the existing task entry in `## In Progress`. Do NOT check the `[ ]` box, do NOT move the entry to `## Done`, and do NOT remove it from `## In Progress`. Archiving is handled exclusively by `pnpm run claude:update-tasklog`, which reads the `## In Progress` block as-is — moving or checking it yourself breaks that script.
 
 ## In Progress
-- [ ] Create a Screen in src/components/Dashboard/Screens for DashboardScreen.jsx that correspondes to the remotion/compositions/DashboardScreen.jsx props. The props should save to db.json the same way all the other Macros do
+- [ ] In the MarkerText macro, I would like the ability to choose between the text going above/below/left/right of the circle
   - Profile: Coder
-  - Branch: feature/AddDash
-  - Passed Test: The App updates db.json.app.installedMacros.DashboardScreen on screen update of the props.
-  - Passed Test: Setting the ActiveMacro to DashboardScreen with correct props causes localhost:3005/DashboardScreen to load in Remotion Studio with no errors
-  - Follow-up: `Dashboard.jsx`'s routeActiveScreen switch matched on the literal string `"Dashboard"` instead of `"DashboardScreen"`, so the screen was unreachable via sidebar nav — fixed as part of this task (1-line change).
-  - Follow-up: Built out `src/components/Dashboard/screens/DashboardScreen.jsx` (was a placeholder) with fields for graphic_size, graphic_placement_x, graphic_placement_y, budget, spent, increment — matching `remotion/compositions/DashboardScreen/DashboardScreen.jsx` prop names, following the existing updateField/updateMacro pattern from AnimateImage.jsx/MarkerText.jsx.
-  - Follow-up: `db.json` was intentionally left untouched (macro stays `{}` until the app itself writes through the new form) per the no-direct-db.json-writes rule.
-  - Follow-up: Verified with `npx vite build` (succeeds). Could not verify Remotion Studio load directly — sandbox network blocks `remotion.media` (Chrome headless download); needs a manual check in the user's browser at localhost:3005/DashboardScreen.
-  - Follow-up: `.claude/index.src.json` entries for `Dashboard.jsx` and `DashboardScreen.jsx` (screens) are now stale (still describe the old bug/stub) — needs a Librarian pass.
+  - Branch: feature/MarkerTextFixes
+  - Done: added `textPosition` prop (`"above" | "below" | "left" | "right"`, default `"above"` to preserve existing behavior) to `remotion/compositions/MarkerText/MarkerText.jsx`. Orchestrator computes the text's anchor point off the circle's true geometry (vertical diameter for above/below, elliptical width for left/right, via `MarkerCircle`'s now-exported `WIDTH_FACTOR`) plus the existing `TEXT_GAP_FRACTION` gap, and clamps the result to stay within the frame (0–100%).
+  - Done: `MarkerTypewriter.jsx` gained `left` and `align` props (`"center" | "start" | "end"`) — `align` picks the horizontal anchor-translate (`-50%`/`0%`/`-100%`) so left/right text grows away from the circle instead of into it, while above/below keep the original center-anchored behavior unchanged (`align: "center"` is still the default).
+  - Done: added a "Text Position" `<select>` (Above/Below/Left/Right) to `src/components/Dashboard/screens/MarkerText.jsx`, writing `macro.textPosition` via the existing `updateField` pattern.
+  - Note: for `left`/`right`, `MarkerTypewriter`'s font-fit (`getFittedFontSize`) still measures against the full frame width minus edge margins, not the actual space between the circle and the frame edge — long text could visually overlap the circle's side. Same class of approximation the original `above` case already had (gap gets you clear of the circle at typical text lengths, not guaranteed for very long strings). Not fixed here — flagging rather than expanding scope; a proper fix would need `MarkerTypewriter` to fit against a caller-supplied max width instead of deriving it from `width` internally.
+  - Verified: `npx esbuild` bundle-compiles `MarkerText.jsx`/`MarkerTypewriter.jsx`/`MarkerCircle.jsx` cleanly (resolves the new `WIDTH_FACTOR` import, no syntax/type errors) and `npx vite build` succeeds for the `src/` screen edit. Same sandbox network isolation as prior MarkerText/DashboardScreen rounds prevented a live Remotion Studio render — needs a manual check: set each of the four `textPosition` values (and a couple of `circleTop`/`circleLeft`/`circleSize` combos) via `DEV_OVERRIDE_MACRO_ID` or the app UI and confirm text sits flush against the circle on the correct side with no overlap, and that `above` (the default/pre-existing behavior) looks pixel-identical to before this change.
+  - Note: `.claude/index.src.json`'s entry for `src/components/Dashboard/screens/MarkerText.jsx` is now stale (macro shape doesn't list `textPosition`) — needs a Librarian pass.
 
 ## Backlog
-
 
 ## Done

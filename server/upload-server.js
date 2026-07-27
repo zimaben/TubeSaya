@@ -10,12 +10,14 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { execFile } from "child_process";
 import { fileURLToPath } from "url";
 import { JSDOM } from "jsdom";
 import DOMPurify from "dompurify";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadDir = path.join(__dirname, "..", "public", "uploads");
+const rootDir = path.join(__dirname, "..");
+const uploadDir = path.join(rootDir, "public", "uploads");
 
 fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -73,6 +75,8 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(express.json());
+
 app.post("/upload", (req, res) => {
   upload.single("image")(req, res, (err) => {
     if (err) {
@@ -109,6 +113,26 @@ app.delete("/upload/:filename", (req, res) => {
     if (err) return res.status(500).json({ error: "Delete failed" });
     res.json({ ok: true });
   });
+});
+
+app.post("/render", (req, res) => {
+  const filename = typeof req.body?.filename === "string" ? req.body.filename : "";
+
+  execFile(
+    "node",
+    [path.join(rootDir, "remotion", "render.js")],
+    { cwd: rootDir, maxBuffer: 20 * 1024 * 1024, env: { ...process.env, RENDER_FILENAME: filename } },
+    (err, stdout, stderr) => {
+      if (err) {
+        console.error(stderr || err.message);
+        return res.status(500).json({ error: stderr || err.message });
+      }
+      // A render profile with multiple steps (see remotion/render-notes.md)
+      // logs one "-> <path>" line per output file it produced.
+      const outputs = [...stdout.matchAll(/-> (.+)$/gm)].map((m) => path.relative(rootDir, m[1].trim()));
+      res.json({ ok: true, log: stdout, output: outputs[0] ?? null, outputs });
+    }
+  );
 });
 
 // Basic error handler for anything else (e.g. malformed multipart body)

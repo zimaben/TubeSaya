@@ -129,3 +129,135 @@ is filed under the RC that was in progress when it merged. Newest task within ea
   - Follow-up (user visual review, round 4): placement confirmed "perfect" by the user; still ~5% right overflow at the 0.09 `FONT_SCALE`, and they asked for the row gap to grow alongside a further font cut. (1) `FONT_SCALE` dropped 0.09→0.075 — user's ask ("about the equivalent of 5VW") doesn't map cleanly onto `FONT_SCALE`'s units (fraction of the *graphic's* width, not the video canvas), so I converted it as a 5%-of-video-canvas cut relative to the default `graphic_size` (30%): `0.05 / 0.30` ≈ -17% relative, applied to 0.09. **This conversion assumes graphic_size≈30 — if the user's actual test composition uses a very different graphic_size, re-tune `FONT_SCALE` directly rather than re-deriving through this formula.** (2) Added `ROW_GAP_RATIO` (0.35 of `fontSizePx`) and a `gap` on the Budget/Spent flex column so row spacing scales with the (now smaller) font. Re-verified via `esbuild` bundle check only — same sandbox limitation, still needs a Studio eyeball to confirm the overflow is actually gone and the gap reads right.
   - Follow-up (user visual review, round 5) — user says "more or less perfect" now: (1) added `TEXT_SHIFT_RATIO` (0.025 of video `width`, same "VW = % of video canvas" convention as round 4's font cut) — the Budget/Spent column's `left` is nudged left by `textShiftPx` while the popup's `transform` gets an offsetting `translateX(+textShiftPx)` prepended, so the "+" popup stays exactly where it already was (confirmed good) while only the text columns move. Same sandbox limitation as every prior round — verified via `esbuild` bundle check only, not rendered.
   - Note: did not update the CLAUDE.md Macros table or `.claude/index.src.json` (out of scope for this Coder-tagged task) — needs a Librarian pass.
+
+### Read the tasklog.md and review the last completed task. The next step is to create a Render button that triggers a render using the settings in the db and the selected Macro
+  - Profile: Coder
+  - Branch: feature/PreviewRender
+  - Passed Test: file exists in the "out" folder at the root of the project
+  - Done: `remotion/render.js` created — reads `db.json` (`app.lastOpenMacro` for the composition id, `app.settings.render.codec`/`crf`), then shells out to `node_modules/.bin/remotion render` (so it honors `remotion.config.ts`'s existing prores/pixelFormat/publicDir setup) to write `out/{macroId}.{mov|mp4}`. `crf` is only passed for non-ProRes codecs (ProRes quality comes from `Config.setProResProfile`, not crf).
+  - Done: `server/upload-server.js` — added `POST /render`, which runs `node remotion/render.js` via `execFile` and returns `{ ok, log }` (or `500` with stderr on failure). Reuses the existing port-3001 server rather than standing up a new one.
+  - Done: `src/components/Sidebar/comp/SidebarFooter.jsx` — added a "Render Video" button inside the existing Preview modal (`renderStatus` state: idle/rendering/done/error), calling `POST http://localhost:3001/render`. Left the sidebar's own "Render" button/Preview-iframe modal behavior unchanged — that button opens the preview, this new button (inside the modal) triggers the actual file render, since the two were explicitly scoped separately by the prior ticket.
+  - Verified: ran `node remotion/render.js` directly — produced `out/AnimateText.mov` (9MB, matches `lastOpenMacro: "AnimateText"` and `settings.render.codec: "proRes"`). Also verified the full HTTP path by starting `upload-server.js` and `curl -X POST http://localhost:3001/render` in the same shell call — got `{"ok":true,"log":"...Rendered \"AnimateText\" -> .../out/AnimateText.mov..."}` and confirmed the file on disk. `npx vite build` and `node --check server/upload-server.js` both pass.
+  - Not verified: clicking the actual "Render Video" button in a live browser (sandbox network isolation — my Bash can't reach the user's real dev server per project memory). Endpoint and script are confirmed working via direct curl; the fetch call in `SidebarFooter.jsx` uses the same URL/method, so it should behave identically, but a manual click-through in-browser is still worth a quick check.
+  - Note: `.claude/index.src.json`'s `SidebarFooter.jsx` entry is now further stale (still describes the old console.log stub, predates even the Preview-modal version) — needs a Librarian pass covering both the Preview modal and this new Render button.
+  - Follow-up: added an editable "File name" field to the Render modal (defaults to the active macro name, reset fresh each time the modal opens; sanitized server-side, path-traversal safe). `POST /render` now accepts `{ filename }`, threads it to `render.js` via `RENDER_FILENAME` env var, and returns the real resolved output path (`output`) so the success message isn't a guess.
+  - Follow-up: fixed two bugs reported by user — (1) closing the modal now resets `renderStatus`/`renderError` instead of leaving a stale "Render failed" on reopen; (2) surfaced the full server error text in a `<pre>` block on failure (was previously just "Render failed" with no detail) — root cause of the specific 404 the user hit was a stale `upload-server.js` process from before this feature existed (no hot-reload on that server); resolved by restarting `pnpm run dev`.
+  - Follow-up (structural, not macro-specific): `render.js` restructured from a single hardcoded video-render call into a step-based pipeline (`RENDER_PROFILES` registry keyed by composition id, default `[{ type: "video" }]`) so a macro with an atypical render flow — e.g. `DashboardScreen` needing a start-frame PNG, the animated MOV, and an end-frame PNG — can register its own step list without changing the engine. Still shells out to the `remotion` CLI per step (not the raw Node bundler/renderer API) specifically to keep `remotion.config.ts`'s `publicDir`/`pixelFormat`/`proResProfile`/`imageFormat` in effect automatically, since those are only auto-applied by the CLI's config loader — full reasoning, the step-shape contract, and the perf tradeoff (each step re-bundles) are written up in new `remotion/render-notes.md`. `POST /render`'s response gained an `outputs` array (every file a profile's steps produced); `output` stays as `outputs[0]` for the current single-file UI, which is unchanged. No profile entries are registered yet (`RENDER_PROFILES = {}`, `DashboardScreen`'s entry lives as a commented example) — implementing an actual macro's still-export flow is separate, not-yet-scheduled work.
+  - Verified: smoke-tested the new step engine directly — `remotion still ... --frame=0` and `--frame=-1` (last-frame) both work as designed. Temporarily enabled a 3-step profile (`{start-still, video, end-still}`) against `AnimateText` end-to-end through the real `POST /render` path and confirmed all three files landed on disk with correct names/content, then reverted `render.js` to its committed inert state (`RENDER_PROFILES = {}`) before finishing.
+
+## 1.0.2
+
+### Create a Screen in src/components/Dashboard/Screens for DashboardScreen.jsx that correspondes to the remotion/compositions/DashboardScreen.jsx props. The props should save to db.json the same way all the other Macros do
+
+  - Passed Test: The App updates db.json.app.installedMacros.DashboardScreen on screen update of the props.
+  - Passed Test: Setting the ActiveMacro to DashboardScreen with correct props causes localhost:3005/DashboardScreen to load in Remotion Studio with no errors
+  - Follow-up: `Dashboard.jsx`'s routeActiveScreen switch matched on the literal string `"Dashboard"` instead of `"DashboardScreen"`, so the screen was unreachable via sidebar nav — fixed as part of this task (1-line change).
+  - Follow-up: Built out `src/components/Dashboard/screens/DashboardScreen.jsx` (was a placeholder) with fields for graphic_size, graphic_placement_x, graphic_placement_y, budget, spent, increment — matching `remotion/compositions/DashboardScreen/DashboardScreen.jsx` prop names, following the existing updateField/updateMacro pattern from AnimateImage.jsx/MarkerText.jsx.
+  - Follow-up: `db.json` was intentionally left untouched (macro stays `{}` until the app itself writes through the new form) per the no-direct-db.json-writes rule.
+  - Follow-up: Verified with `npx vite build` (succeeds). Could not verify Remotion Studio load directly — sandbox network blocks `remotion.media` (Chrome headless download); needs a manual check in the user's browser at localhost:3005/DashboardScreen.
+  - Follow-up: `.claude/index.src.json` entries for `Dashboard.jsx` and `DashboardScreen.jsx` (screens) are now stale (still describe the old bug/stub) — needs a Librarian pass.
+  - Profile: Coder
+  - Branch: feature/AddDash
+
+### Update the .claude/index.src.json entries for Dashboard.jsx and DashboardScreen.jsx to describe the new files. Previously it was a stub
+
+  - Profile: Librarian
+  - Branch: feature/AddDash
+  - Done: `src/components/Dashboard/screens/DashboardScreen.jsx` entry rewritten from "Stub ... placeholder text" to describe the real form (graphic_size, graphic_placement_x, graphic_placement_y, budget, spent, increment fields matching `remotion/compositions/DashboardScreen/DashboardScreen.jsx`'s props exactly, via the standard `updateField`/`updateMacro` pattern). `relatedData` updated from "(currently {})" to the real macro shape.
+  - Done: `src/components/Dashboard/Dashboard.jsx` entry's `gotchas` updated — the previously-documented "Dashboard" vs "DashboardScreen" switch-case mismatch (which made the screen unreachable) is fixed in the current code; entry now reflects that DashboardScreen is reachable via normal sidebar nav.
+  - Note: new gotcha recorded on the DashboardScreen.jsx entry — `graphic_placement_x`'s option values are "left"/"center"/"right" (not "middle"), and the current db.json seed only sets budget/spent/increment, so graphic_size/placement fields rely entirely on the screen's `??` defaults until a user touches them in the UI.
+  - Verified: `.claude/index.src.json` re-parses as valid JSON after the edits (`python3 -m json.load`).
+
+- [ ] You must fix this error first to assist with testing before any other work on this branch can proceed.
+
+Error encountered when rendering via Remotion Studio UI:
+
+Error: Failed to launch the browser process!
+Error: Closed with 127 signal: null
+    at ChildProcess.<anonymous> (/home/ben/projects/software/TubeSaya/node_modules/.pnpm/@remotion+renderer@4.0.484_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@remotion/renderer/dist/browser/BrowserRunner.js:260:32)
+    at ChildProcess.emit (node:events:524:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+/home/ben/projects/software/TubeSaya/node_modules/.remotion/chrome-headless-shell/linux64/chrome-headless-shell-linux64/chrome-headless-shell: error while loading shared libraries: libnspr4.so: cannot open shared object file: No such file or directory
+Troubleshooting: https://remotion.dev/docs/troubleshooting/browser-launch
+    at onClose (/home/ben/projects/software/TubeSaya/node_modules/.pnpm/@remotion+renderer@4.0.484_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@remotion/renderer/dist/browser/BrowserRunner.js:269:20)
+    at ChildProcess.<anonymous> (/home/ben/projects/software/TubeSaya/node_modules/.pnpm/@remotion+renderer@4.0.484_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@remotion/renderer/dist/browser/BrowserRunner.js:260:24)
+    at ChildProcess.emit (node:events:524:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+Node.js v20.20.2
+
+Root cause: The bundled Chrome Headless Shell (via @remotion/renderer) cannot start because the system is missing required shared libraries (NSPR/NSS and related). This is a missing OS-level dependency, not a code defect.
+
+Fix steps:
+
+bash
+sudo apt-get update
+sudo apt-get install -y libnspr4 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+  libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 \
+  libxfixes3 libxrandr2 libgbm1 libasound2
+
+Or, if Playwright is present in the project:
+
+bash
+npx playwright install-deps
+
+Verification: Re-run the Remotion Studio render and confirm the browser process launches without error.
+
+Follow-up: If this environment is containerized/CI-driven, add the dependency install step to the Dockerfile/CI setup so this doesn't recur.
+
+Reference: https://remotion.dev/docs/troubleshooting/browser-launch
+
+Profile: Coder
+Branch: feature/PreviewRender
+
+- Resolved. Root cause confirmed: `libnspr4`/`libnss3` and related shared libs were missing (verified via `ldconfig -p`).
+- On this OS (Ubuntu 24.04 / WSL2), several package names in the original fix list have been renamed with a `t64` suffix (64-bit time_t transition): use `libatk1.0-0t64`, `libatk-bridge2.0-0t64`, `libcups2t64`, `libasound2t64` in place of the non-t64 names, which have no install candidate.
+- Gotcha for anyone rerunning this: `apt-get install pkg1 pkg2 ...` resolves the whole list before installing anything — one unresolvable name (e.g. old `libasound2`) aborts the entire transaction silently, so it can look like the install "ran" but nothing actually got installed. Re-run with corrected names if the error persists identically after a first attempt.
+- Verified fixed via a successful Remotion Studio render after installing the corrected package list.
+
+### Add Preview/Render functionality to the Sidebar "Render" button (`src/components/Sidebar/comp/SidebarFooter.jsx`), replacing the current `console.log("Render clicked")` stub.
+
+Scope: Preview only (live Remotion Studio composition for the active macro, shown in a dismissable modal). Actual file-rendering (invoking a real render pipeline to produce an output video) is explicitly out of scope for this ticket — the `render` npm script points at `remotion/render.js`, which does not exist yet and needs its own ticket (output path, progress reporting, codec/CRF from `db.json app.settings.render`).
+
+Behavior:
+- Clicking the button opens a dismissable modal containing an `<iframe>` pointed at `http://localhost:3005/{activeMacro}` — Remotion Studio's deep-link route for a specific composition.
+- `{activeMacro}` is the currently active macro key, already held in `App.jsx` state and passed to `Sidebar.jsx` as the `activeMacro` prop — thread it down to `SidebarFooter.jsx` as a new prop (`Sidebar.jsx` currently renders `<SidebarFooter />` with no props). This mirrors `db.json app.lastOpenMacro`, so no separate fetch is needed.
+- No manual prop/settings wiring is needed beyond passing the macro key: `remotion/Root.jsx` already resolves `props` from `db.json app.installedMacros.{key}.macro` and `settings` (width/height/fps) from `db.json app.settings.video` when Studio loads that composition id.
+
+Prerequisite: Remotion Studio must be running on port 3005 for the iframe to load. Add it to the `dev` script's `concurrently` list in `package.json` (reuse the existing `remotion:studio` script rather than duplicating the command) so it starts automatically with `pnpm run dev`.
+
+Things to verify while implementing:
+- Confirm Remotion Studio's dev server doesn't send `X-Frame-Options`/CSP `frame-ancestors` headers that would block iframe embedding — if it does, fall back to `window.open` for the preview instead of an iframe, and note that in this entry.
+- `remotion/Root.jsx`'s `DEV_OVERRIDE_MACRO_ID` (currently `null`) substitutes a different macro's props when set — if left non-null during local tuning, the embedded preview will silently show the override macro instead of the actual active one. Not this ticket's bug to fix, just a sharp edge to be aware of when testing.
+- `db.json` is imported statically in `Root.jsx` (`import db from "../db.json"`) — confirm Studio's bundler hot-reloads on `db.json` changes so the preview reflects live prop edits without a manual Studio restart; record the finding as a gotcha either way.
+
+Verification: With `pnpm run dev` running, edit a macro's fields in the Dashboard, click Render in the sidebar, and confirm the modal opens showing that macro's live Remotion Studio preview reflecting current `db.json` state; confirm the modal dismisses cleanly.
+
+Profile: Coder
+Branch: feature/PreviewRender
+  - Implemented: `SidebarFooter.jsx` now takes an `activeMacro` prop, holds `previewOpen` state, and renders a dismissable modal (✕ button, click matches `Settings.jsx`'s existing modal style) containing an `<iframe src="http://localhost:3005/{activeMacro}">`. `Sidebar.jsx` threads `activeMacro` down to `SidebarFooter`. `package.json`'s `dev` script's `concurrently` list now also runs `pnpm run remotion:studio`.
+  - Verified (headers): started Remotion Studio locally and curled `http://localhost:3005/` — response has no `X-Frame-Options` or CSP `frame-ancestors` header, so the iframe approach is safe as specified; no `window.open` fallback needed.
+  - Not fully verified (db.json hot-reload timing): couldn't complete an end-to-end live test in this sandbox — background dev servers I start lose network reachability once the Bash tool call that started them ends (each call appears to get its own network namespace), so a start-then-curl-later sequence across separate calls fails even for servers I own, not just the user's. Code-level finding instead: `Root.jsx` registers exactly one dynamic `<Composition>` whose `id` equals `db.json`'s `app.lastOpenMacro`, not one composition per macro. `SidebarFooter`'s `activeMacro` prop updates instantly on click (App-side React state), independent of the async round trip (PUT to json-server → `db.json` write → Studio's file-watch rebuild). So right after switching macros there's a window where the iframe may request `/{activeMacro}` before Studio's registered composition id has caught up — worth confirming manually per this task's Verification step, in a real browser with `pnpm run dev` running.
+  - Manual verification (opening the modal in a browser, confirming the live preview reflects Dashboard edits, confirming clean dismissal) still needs to be done by the user — sandboxed Bash here can't reach a browser-rendered iframe result the way a person can.
+
+### Update `DashboardScreen`'s render flow to export its first and last frames as `{filename}_first.png` / `{filename}_last.png` alongside the animated video — so the graphic's pre- and post-animation states can be composited back into a static asset later.
+
+  Register a `DashboardScreen` entry in `RENDER_PROFILES` (`remotion/render.js`) using the step pipeline already built for this — read `remotion/render-notes.md` first, it covers the step-shape contract, why steps shell out to the `remotion` CLI instead of the raw Node renderer API (config parity for `publicDir`/`pixelFormat`/`proResProfile`/`imageFormat`), and the known perf tradeoff (each step re-bundles independently). Three steps: a first-frame still (`frame: 0`, `suffix: "_first"`), the video, and a last-frame still (`frame: "last"`, `suffix: "_last"`).
+
+  Note: `render.js` currently has a *commented-out* `DashboardScreen` example using `-start`/`-end` suffixes — that was illustrative only, not a spec. This ticket's real suffixes are `_first`/`_last` (matches this ticket's title, not the placeholder). Replace that comment with the real entry rather than leaving both namings in the file.
+
+  Since `POST /render`'s `output` field is `outputs[0]` (the current single-file UI's success message reads only that one), consider step order carefully: `[video, first-still, last-still]` keeps `output` pointing at the video (today's behavior for every other macro) rather than surprising the existing UI with a PNG path. Not mandatory — flag whatever order is chosen and why.
+
+  - Profile: Coder
+  - Branch: feature/DashboardRenderFlow
+  - Passed Test: with `DashboardScreen` active and a chosen filename, clicking Render produces exactly three files in `out/`: `{filename}.{mov|mp4}`, `{filename}_first.png`, `{filename}_last.png`.
+  - Passed Test: `{filename}_first.png` matches the composition's true frame 0 (pre-animation — no counter progress, no popup).
+  - Passed Test: `{filename}_last.png` matches the composition's true final frame (post-fade — popup fully transparent), not the midpoint. See the `DashboardScreen` build history in `.claude/tasklog.md` (RC/1.0.2) for the midpoint-vs-final distinction the original build already established — don't confuse the two.
+  - Passed Test: rendering any other macro (e.g. `AnimateText`) is unaffected — still produces exactly one video file in `out/`, no stray PNGs.
+  - Passed Test: `POST /render`'s `outputs` array contains all three relative paths, in the chosen step order; confirmed by reading the actual response, not just checking files landed on disk.
+  - Out of scope (per prior conversation — flag, don't silently expand): updating `SidebarFooter.jsx`'s Render modal UI to show/link all three outputs instead of just the one `output` path. `render-notes.md` already documents this as separate, not-yet-scheduled work.
+  - Done: added `RENDER_PROFILES.DashboardScreen` in `remotion/render.js` — `[{ type: "video" }, { type: "still", frame: 0, suffix: "_first" }, { type: "still", frame: "last", suffix: "_last" }]`, replacing the old `-start`/`-end` placeholder comment. Order chosen as `[video, first-still, last-still]` so `outputs[0]`/`output` keeps pointing at the video, matching every other macro's UI behavior. No engine or server changes needed — `render.js`'s step runner and `upload-server.js`'s `outputs` regex parsing already handled multi-step profiles generically.
+  - Verified mechanically: temporarily flipped `Root.jsx`'s `DEV_OVERRIDE_MACRO_ID` to `"DashboardScreen"` (Root.jsx only ever registers one `<Composition>`, matching `db.json`'s `lastOpenMacro`, so a non-active macro can't otherwise be rendered) and ran the three steps standalone against a scratch dir — reverted the override immediately after, `db.json` was never touched. Got 3 files: `.mov` (ProRes, per `db.json`'s current codec), `_first.png`, `_last.png`, in that order.
+  - Fixed (per follow-up request): `DashboardScreen.jsx`'s popup was visible at full opacity from frame 0 instead of gating on `leadInFrames` like `spentNow` and the `ching` SFX do. Changed `popupDragProgress`/`popupFadeProgress`'s interpolate input range from `[0, popupTotalFrames]` to `[leadInFrames, popupTotalFrames]`, and `popupOpacity` from `1 - popupFadeProgress` to `frame < leadInFrames ? 0 : 1 - popupFadeProgress` (needed because `extrapolateLeft: "clamp"` alone still resolves to progress 0 → opacity 1 before `leadInFrames`, not 0).
+  - Fixed (per follow-up request): added a `START_DELAY_SECONDS = 0.05` static beat before any DashboardScreen animation begins (counter, popup, ching), so frame 0 doesn't read as already-in-motion. Implemented via `effectiveFrame = Math.max(0, frame - startDelayFrames)`, threaded through the existing `spentNow`/popup interpolates unchanged in shape; the ching `<Sequence>`'s `from` and `getDashboardDurationInFrames`'s total both shifted by `startDelayFrames` to match. Verified: frames 0 and 1 (2 frames @ 30fps) both hold the static pre-animation state, frame 17 (`startDelayFrames + leadInFrames`) shows the counter fully counted and popup just appearing, last frame unaffected.
+  - Last-frame test confirmed correct: `_last.png` shows `spentNow` fully incremented and popup opacity `0` (not the midpoint) — matches the RC/1.0.2 fix already in place.
+  - Other macros unaffected by inspection: `RENDER_PROFILES` fallback (`steps = RENDER_PROFILES[compositionId] ?? [{ type: "video" }]`) is unchanged for every id besides `DashboardScreen`.
