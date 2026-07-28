@@ -25,6 +25,7 @@
   "type": "module",
   "dependencies": {
     "@remotion/fonts": "^4.0.484",
+    "@remotion/player": "^4.0.484",
     "dompurify": "^3.4.11",
     "express": "^5.1.0",
     "jsdom": "^29.1.1",
