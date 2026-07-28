@@ -18,6 +18,7 @@ export const TypewriterText = ({
   fontSize,
   fontColor,
   outlineColor,
+  outlineWidth,
   xPosition,
   customX,
   yPosition,
@@ -41,9 +42,9 @@ export const TypewriterText = ({
     xPosition === "custom"
       ? `${customX}%`
       : xPosition === "left"
-      ? "0%"
+      ? `${EDGE_MARGIN_PERCENT}%`
       : xPosition === "right"
-      ? "100%"
+      ? `${100 - EDGE_MARGIN_PERCENT}%`
       : "50%"; // center
 const top =
     yPosition === "custom"
@@ -82,7 +83,7 @@ const top =
     fontSize: fittedFontSize,
     color: fontColor,
     WebkitTextStroke:
-      outlineColor && outlineColor !== "transparent" ? `2px ${outlineColor}` : "",
+      outlineColor && outlineColor !== "transparent" ? `${outlineWidth ?? 2}px ${outlineColor}` : "",
     whiteSpace: "pre",
   };
 

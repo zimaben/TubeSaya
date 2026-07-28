@@ -16,6 +16,7 @@ export const DanceText = ({
   fontSize,
   fontColor,
   outlineColor,
+  outlineWidth,
   xPosition,
   customX,
   yPosition,
@@ -39,9 +40,9 @@ export const DanceText = ({
     xPosition === "custom"
       ? `${customX}%`
       : xPosition === "left"
-      ? "0%"
+      ? `${EDGE_MARGIN_PERCENT}%`
       : xPosition === "right"
-      ? "100%"
+      ? `${100 - EDGE_MARGIN_PERCENT}%`
       : "50%"; // center
 const top =
     yPosition === "custom"
@@ -103,7 +104,7 @@ const top =
               color: fontColor,
               WebkitTextStroke:
                 outlineColor && outlineColor !== "transparent"
-                  ? `2px ${outlineColor}`
+                  ? `${outlineWidth ?? 2}px ${outlineColor}`
                   : "",
               transform: `translateY(${translateY}px) rotate(${rotate}deg)`,
               whiteSpace: "pre",

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Sidebar from "./components/Sidebar/Sidebar.jsx";
 import Dashboard from "./components/Dashboard/Dashboard.jsx";
 import AppTray from "./components/AppTray/AppTray.jsx";
@@ -6,6 +6,7 @@ import AppTray from "./components/AppTray/AppTray.jsx";
 export default function App() {
   const [data, setData] = useState(null);
   const [activeMacro, setActiveMacro] = useState(null);
+  const isInitialLoad = useRef(true);
 
   const colorPalette = {
     "hotpink": "#F7567C",
@@ -41,18 +42,6 @@ export default function App() {
     loadData();
   }, []);
 
-    useEffect(() => {
-    if (!data) return;
-    const saveData = async () => {
-      await fetch("http://localhost:3000/app", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-    };
-    saveData();
-  }, [data]);
-
   const updateSettings = (settings) => {
     setData((current) => ({
       ...current,
@@ -86,6 +75,16 @@ export default function App() {
       return;
     }
 
+    // The initial load's setData() also lands here — skip it so we don't
+    // immediately PUT the just-fetched data back and rewrite db.json on
+    // every load (json-server persists PUTs to disk, and Vite's watcher
+    // answers that write with a full page reload, which reloads App and
+    // repeats forever).
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
+
     const saveData = async () => {
       try {
         await fetch("http://localhost:3000/app", {
@@ -113,6 +112,7 @@ export default function App() {
         macros={data.installedMacros}
         activeMacro={activeMacro}
         setActiveMacro={changeActiveMacro}
+        settings={data.settings}
       />
 
       <Dashboard

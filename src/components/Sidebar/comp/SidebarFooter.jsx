@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 
-export default function SidebarFooter({ activeMacro }) {
+const PreviewPlayer = lazy(() => import("./PreviewPlayer"));
+
+export default function SidebarFooter({ activeMacro, macros, settings }) {
+    const rawMacro = macros?.[activeMacro]?.macro;
     const [previewOpen, setPreviewOpen] = useState(false);
     const [renderStatus, setRenderStatus] = useState("idle"); // idle | rendering | done | error
     const [renderError, setRenderError] = useState(null); // throwaway: full last error message, for debugging only
@@ -109,11 +112,15 @@ export default function SidebarFooter({ activeMacro }) {
                             </pre>
                         )}
 
-                        <iframe
-                            src={`http://localhost:3005/${activeMacro}`}
-                            className="flex-1 w-full border-0"
-                            title="Remotion Studio Preview"
-                        />
+                        <Suspense
+                            fallback={
+                                <div className="flex-1 flex items-center justify-center text-sm text-[#1A181B]/50">
+                                    Loading preview…
+                                </div>
+                            }
+                        >
+                            <PreviewPlayer activeMacro={activeMacro} rawMacro={rawMacro} settings={settings} />
+                        </Suspense>
                     </div>
                 </div>
             )}

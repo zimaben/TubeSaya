@@ -8,6 +8,7 @@ export default function AnimateText({ macro, updateMacro, settings }) {
     black: "#1A181B",
     beige: "#F2F3D9",
     bronze: "#DC9E82",
+    white: "#FFFFFF",
   };
 
   const animations = [
@@ -123,6 +124,9 @@ export default function AnimateText({ macro, updateMacro, settings }) {
                     <option value="Gaegu-Regular">Gaegu</option>
                     <option value="Gaegu-Bold">Gaegu Bold</option>
                     <option value="Gaegu-Light">Gaegu Light</option>
+                    <option value="Gluten-Bold">Gluten Bold</option>
+                    <option value="Gluten-Light">Gluten Light</option>
+                    <option value="Gluten-ExtraLight">Gluten Extra Light</option>
                     <option value="GowunDodum-Regular">Gowun Dodum</option>
                     <option value="Inter_18pt-Regular">Inter</option>
                     <option value="Inter_18pt-Thin">Inter Thin</option>
@@ -177,6 +181,8 @@ export default function AnimateText({ macro, updateMacro, settings }) {
                         className={`w-5 h-5 rounded-full border-2 transition ${
                             macro.fontColor === color
                             ? "border-black"
+                            : color === "#FFFFFF"
+                            ? "border-[#CBE9F2]"
                             : "border-transparent"
                         }`}
                         style={{ backgroundColor: color }}
@@ -219,6 +225,8 @@ export default function AnimateText({ macro, updateMacro, settings }) {
                         className={`w-5 h-5 rounded-full border-2 transition ${
                             macro.outlineColor === color
                             ? "border-black"
+                            : color === "#FFFFFF"
+                            ? "border-[#CBE9F2]"
                             : "border-transparent"
                         }`}
                         style={{ backgroundColor: color }}
@@ -226,6 +234,25 @@ export default function AnimateText({ macro, updateMacro, settings }) {
                         />
                     ))}
                     </div>
+
+                    {macro.outlineColor && macro.outlineColor !== "transparent" && (
+                    <div className="mt-3">
+                        <label className="block text-xs text-[#6B6258] mb-1">
+                        Outline Width (px)
+                        </label>
+
+                        <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={macro.outlineWidth ?? 2}
+                        onChange={(e) =>
+                            updateField("outlineWidth", Number(e.target.value))
+                        }
+                        className="w-full px-3 py-2 border border-[#CBE9F2] rounded-lg text-sm outline-none focus:border-[#09ACEC]"
+                        />
+                    </div>
+                    )}
                 </div>
             </div>
             {/* X/Y Position */}
