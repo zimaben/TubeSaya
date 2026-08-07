@@ -1,3 +1,7 @@
+import Checklist from "./Checklist";
+
+const OVERLAY_TYPES = ["BudgetTracker", "Checklist"];
+
 export default function DashboardScreen({ macro, updateMacro }) {
 
   const updateField = (key, value) => {
@@ -7,16 +11,41 @@ export default function DashboardScreen({ macro, updateMacro }) {
     });
   };
 
+  const overlayType = macro.overlayType || "BudgetTracker";
+
   return (
     <div className="bg-white border border-[#CBE9F2] rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-[#CBE9F2]">
             <h3 className="text-sm font-semibold text-[#2A2118]">
-            Dashboard
+            Overlays
             </h3>
         </div>
 
         <div className="p-6 space-y-5">
 
+            {/* Overlay Type */}
+            <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#B07D4A] mb-2">
+                    Overlay Type
+                </label>
+
+                <select
+                    value={overlayType}
+                    onChange={(e) => updateField("overlayType", e.target.value)}
+                    className="w-full px-3 py-2 border border-[#CBE9F2] rounded-lg text-sm outline-none focus:border-[#09ACEC]"
+                >
+                    {OVERLAY_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                        {type}
+                    </option>
+                    ))}
+                </select>
+            </div>
+
+            {overlayType === "Checklist" && <Checklist macro={macro} updateMacro={updateMacro} />}
+
+            {overlayType === "BudgetTracker" && (
+            <>
             <div className="grid grid-cols-2 gap-4">
                 {/* Graphic Size */}
                 <div>
@@ -115,6 +144,8 @@ export default function DashboardScreen({ macro, updateMacro }) {
                     />
                 </div>
             </div>
+            </>
+            )}
 
         </div>
     </div>

@@ -25,7 +25,7 @@ Status as of last db.json review — update when a stub gets implemented.
 | AnimateText | `remotion/compositions/AnimateText/` | Built — supports typewriter animation, single text or `sequence[]` of timed text blocks |
 | AnimateImage | `remotion/compositions/AnimateImage/` | Built — `bounceIn` animation implemented; guards against empty `src` (see Gotchas log) |
 | MarkerText | `remotion/compositions/MarkerText/` | Built — hand-drawn draw-on circle (`MarkerCircle.jsx`) + marker-styled typewriter reveal (`MarkerTypewriter.jsx`), composed by `MarkerText.jsx`; circle draws first, text starts once it finishes |
-| DashboardScreen | — | Stub — `macro: {}` in db.json, no component yet |
+| DashboardScreen | `remotion/compositions/DashboardScreen/` | Built — sidebar label is "Overlays"; the screen has an in-panel `macro.overlayType` selector (same pattern as AnimateText's `animation` dropdown) choosing between "BudgetTracker" (implemented — budget/spent/increment fields) and "Checklist" (stub placeholder, no fields yet) |
 | AnimateMap | — | Stub — `macro: {}` in db.json, no component yet |
 | SyncText | — | Stub — `macro: {}` in db.json, no component yet |
 | VFX | — | Stub — `macro: {}` in db.json, no component yet |
