@@ -26,7 +26,7 @@ export default function PreviewPlayer({ activeMacro, rawMacro, settings }) {
                 controls
                 loop
                 autoPlay
-                style={{ width: "100%", height: "100%" }}
+                style={{ width: "100%", height: "auto", maxHeight: "100%", aspectRatio: `${width} / ${height}` }}
             />
         </div>
     );

@@ -4,6 +4,7 @@ import { AbsoluteFill, Audio, Easing, Img, Sequence, interpolate, useCurrentFram
 import { resolveFont } from "../../fonts/fonts";
 import backgroundSrc from "../../imgs/top-bar-item-base.png";
 import chingSfx from "../../sfx/cash-register-ching.mp3";
+import { Checklist } from "../Checklist/Checklist.jsx";
 
 const FONT = "Gluten-Bold";
 
@@ -55,15 +56,41 @@ const textStyle = (fontSizePx, strokeWidthPx) => ({
 });
 
 export const DashboardScreen = ({
+  overlayType = "BudgetTracker",
   graphic_size = 30,
   graphic_placement_x = "right",
   graphic_placement_y = "top",
   budget = 0,
   spent = 0,
   increment = 0,
+  checklistItems,
+  checklistPosition,
+  checklistStyle,
+  checklistFontSize,
+  checklistBoxColor,
+  checklistCheckColor,
+  checklistTextColor,
 }) => {
   const frame = useCurrentFrame();
   const { width, fps } = useVideoConfig();
+
+  // overlayType picks which panel renders (same field the app's editor
+  // screen switches on) — the two hooks above are called unconditionally
+  // either way to satisfy the rules of hooks, then this early-returns before
+  // any BudgetTracker-only computation runs.
+  if (overlayType === "Checklist") {
+    return (
+      <Checklist
+        checklistItems={checklistItems}
+        checklistPosition={checklistPosition}
+        checklistStyle={checklistStyle}
+        fontSize={checklistFontSize}
+        checklistBoxColor={checklistBoxColor}
+        checklistCheckColor={checklistCheckColor}
+        checklistTextColor={checklistTextColor}
+      />
+    );
+  }
 
   const startDelayFrames = Math.round(START_DELAY_SECONDS * fps);
   const leadInFrames = Math.round(LEAD_IN_SECONDS * fps);

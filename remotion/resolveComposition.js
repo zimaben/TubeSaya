@@ -7,6 +7,7 @@ import { AnimateText } from "./compositions/AnimateText/AnimateText.jsx";
 import { AnimateImage } from "./compositions/AnimateImage/AnimateImage.jsx";
 import { MarkerText } from "./compositions/MarkerText/MarkerText.jsx";
 import { DashboardScreen, getDashboardDurationInFrames } from "./compositions/DashboardScreen/DashboardScreen.jsx";
+import { getChecklistDurationInFrames } from "./compositions/Checklist/Checklist.jsx";
 
 export const COMPONENT_MAP = {
   AnimateText,
@@ -26,7 +27,10 @@ export const resolveProps = (macro) => {
 };
 
 export const getDurationInFrames = (macroId, macro, fps) => {
-  if (macroId === "DashboardScreen") return getDashboardDurationInFrames(fps);
+  if (macroId === "DashboardScreen") {
+    if (macro?.overlayType === "Checklist") return getChecklistDurationInFrames(fps);
+    return getDashboardDurationInFrames(fps);
+  }
 
   const props = macro ?? {};
   if (Array.isArray(props.sequence) && props.sequence.length > 0) {
