@@ -293,6 +293,40 @@ export default function MarkerText({ macro, updateMacro, settings }) {
                     </div>
                 </div>
             </div>
+
+            {/* SFX */}
+            <div className="pt-2 border-t border-[#CBE9F2]">
+                <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#B07D4A] cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={macro.includeSfx ?? false}
+                        onChange={(e) => updateField("includeSfx", e.target.checked)}
+                    />
+                    Include SFX?
+                </label>
+
+                {macro.includeSfx && (
+                    <div className="mt-3 space-y-2">
+                        <label className="flex items-center gap-2 text-sm text-[#6B6258] cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={macro.sfxMarkerSounds ?? false}
+                                onChange={(e) => updateField("sfxMarkerSounds", e.target.checked)}
+                            />
+                            Marker Sounds
+                        </label>
+
+                        <label className="flex items-center gap-2 text-sm text-[#6B6258] cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={macro.sfxDing ?? false}
+                                onChange={(e) => updateField("sfxDing", e.target.checked)}
+                            />
+                            Ding
+                        </label>
+                    </div>
+                )}
+            </div>
         </div>
     </div>
   );

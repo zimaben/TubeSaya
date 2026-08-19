@@ -1,8 +1,11 @@
 // PROJECT/remotion/compositions/MarkerText/MarkerText.jsx
 
-import { AbsoluteFill, Sequence, useVideoConfig, getRemotionEnvironment } from "remotion";
+import { AbsoluteFill, Audio, Sequence, useVideoConfig, getRemotionEnvironment } from "remotion";
 import { MarkerCircle, WIDTH_FACTOR } from "./MarkerCircle";
 import { MarkerTypewriter } from "./MarkerTypewriter";
+import markerCircleSfx from "../../sfx/marker-circle.mp3";
+import markerScribbleSfx from "../../sfx/marker-scribble-1sec.mp3";
+import dingSfx from "../../sfx/ding.mp3";
 
 const TEXT_GAP_FRACTION = 0.12; // gap between the text and the circle's near edge, as a fraction of the circle's dimension along that axis
 
@@ -26,6 +29,9 @@ export const MarkerText = ({
   circleTop = 58, // % of video height, anchored at the circle's center — matches MarkerCircle's own contract
   circleLeft = 50, // % of video width, anchored at the circle's center — matches MarkerCircle's own contract
   textPosition = "above", // "above" | "below" | "left" | "right", relative to the circle
+  includeSfx = false,
+  sfxMarkerSounds = false, // circle draw-on + text scribble sounds, timed to each animation's own start
+  sfxDing = false, // intro cue, fires at frame 0 alongside the circle draw-on
 }) => {
   const { fps, width, height } = useVideoConfig();
   // Circle draws first; text starts typing once the circle finishes, like
@@ -98,6 +104,21 @@ export const MarkerText = ({
           alignY={alignY}
         />
       </Sequence>
+      {includeSfx && sfxMarkerSounds && (
+        <>
+          <Sequence from={0} layout="none">
+            <Audio src={markerCircleSfx} />
+          </Sequence>
+          <Sequence from={textStartFrame} layout="none">
+            <Audio src={markerScribbleSfx} />
+          </Sequence>
+        </>
+      )}
+      {includeSfx && sfxDing && (
+        <Sequence from={0} layout="none">
+          <Audio src={dingSfx} />
+        </Sequence>
+      )}
     </AbsoluteFill>
   );
 };
