@@ -26,16 +26,26 @@ const window = new JSDOM("").window;
 const purify = DOMPurify(window);
 
 // --- Multer storage config ---
+// An optional "folder" text field (must be sent before the file field in the
+// FormData) scopes the upload into public/uploads/<folder>/ — used by macros
+// that want their uploads kept separate (e.g. MarkerText's background photos).
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
+  destination: (req, file, cb) => {
+    const folder = typeof req.body.folder === "string" ? req.body.folder.replace(/[^a-zA-Z0-9_-]/g, "") : "";
+    const dir = folder ? path.join(uploadDir, folder) : uploadDir;
+    fs.mkdirSync(dir, { recursive: true });
+    req._uploadDestDir = dir; // stashed for the filename() callback below, same request
+    cb(null, dir);
+  },
   filename: (req, file, cb) => {
+    const destDir = req._uploadDestDir ?? uploadDir;
     const original = path.basename(file.originalname);
     const ext = path.extname(original).toLowerCase();
     const base = path.basename(original, ext).replace(/[^a-zA-Z0-9_-]/g, "_") || "upload";
 
     let name = `${base}${ext}`;
     let counter = 1;
-    while (fs.existsSync(path.join(uploadDir, name))) {
+    while (fs.existsSync(path.join(destDir, name))) {
       name = `${base}-${counter++}${ext}`;
     }
     cb(null, name);
@@ -86,7 +96,7 @@ app.post("/upload", (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const filePath = path.join(uploadDir, req.file.filename);
+    const filePath = path.join(req.file.destination, req.file.filename);
     const isSvg = path.extname(req.file.filename).toLowerCase() === ".svg";
 
     if (isSvg) {
@@ -103,12 +113,21 @@ app.post("/upload", (req, res) => {
       }
     }
 
-    res.json({ src: `uploads/${req.file.filename}` });
+    const relPath = path.relative(path.join(rootDir, "public"), filePath).split(path.sep).join("/");
+    res.json({ src: relPath });
   });
 });
 
 app.delete("/upload/:filename", (req, res) => {
   const filePath = path.join(uploadDir, path.basename(req.params.filename));
+  fs.rm(filePath, { force: true }, (err) => {
+    if (err) return res.status(500).json({ error: "Delete failed" });
+    res.json({ ok: true });
+  });
+});
+
+app.delete("/upload/:folder/:filename", (req, res) => {
+  const filePath = path.join(uploadDir, path.basename(req.params.folder), path.basename(req.params.filename));
   fs.rm(filePath, { force: true }, (err) => {
     if (err) return res.status(500).json({ error: "Delete failed" });
     res.json({ ok: true });

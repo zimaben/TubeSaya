@@ -16,7 +16,7 @@ export default function Dashboard({ activeMacro, settings, macro, updateSettings
     switch(activeMacro){
       case "AnimateText" : return <AnimateText macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } settings={settings} />
       case "AnimateImage" : return <AnimateImage macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } />
-      case "MarkerText" : return <MarkerText macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } />
+      case "MarkerText" : return <MarkerText macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } settings={settings} />
       case "AnimateMap" : return <AnimateMap macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } />
       case "DashboardScreen" : return <DashboardScreen macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } />
       case "VFX" : return <VFX macro={macro} updateMacro={(newMacro) => updateMacro(activeMacro, newMacro) } />

@@ -1,6 +1,6 @@
 // PROJECT/remotion/compositions/MarkerText/MarkerText.jsx
 
-import { AbsoluteFill, Sequence, useVideoConfig } from "remotion";
+import { AbsoluteFill, Sequence, useVideoConfig, getRemotionEnvironment } from "remotion";
 import { MarkerCircle, WIDTH_FACTOR } from "./MarkerCircle";
 import { MarkerTypewriter } from "./MarkerTypewriter";
 
@@ -19,6 +19,8 @@ export const MarkerText = ({
   fontSize,
   color,
   skew,
+  bgSrc, // placement-reference photo; preview only, never rendered to the final video
+  useRefPhoto = false, // screen-side toggle; photo stays on the macro even when this is off
   circleDuration = 1.2,
   circleSize = 0.38,
   circleTop = 58, // % of video height, anchored at the circle's center — matches MarkerCircle's own contract
@@ -66,8 +68,17 @@ export const MarkerText = ({
     alignY = "end";
   }
 
+  const showBg = Boolean(bgSrc) && useRefPhoto && !getRemotionEnvironment().isRendering;
+
   return (
     <AbsoluteFill style={{ backgroundColor: "transparent" }}>
+      {showBg && (
+        // eslint-disable-next-line jsx-a11y/alt-text
+        <img
+          src={bgSrc}
+          style={{ width, height, objectFit: "cover", opacity: 0.5 }}
+        />
+      )}
       <MarkerCircle
         color={color}
         duration={circleDuration}

@@ -20,8 +20,10 @@ export const COMPONENT_MAP = {
 // are stored as base64 data URLs and should be used as-is.
 export const resolveProps = (macro) => {
   const props = { ...(macro ?? {}) };
-  if (props.src && !props.src.startsWith("data:")) {
-    props.src = staticFile(props.src);
+  for (const key of ["src", "bgSrc"]) {
+    if (props[key] && !props[key].startsWith("data:")) {
+      props[key] = staticFile(props[key]);
+    }
   }
   return props;
 };

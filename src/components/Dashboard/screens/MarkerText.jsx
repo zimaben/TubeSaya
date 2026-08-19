@@ -1,4 +1,5 @@
-export default function MarkerText({ macro, updateMacro }) {
+export default function MarkerText({ macro, updateMacro, settings }) {
+  const { width: videoWidth, height: videoHeight } = settings?.video ?? {};
 
   const colorPalette = {
     hotpink: "#F7567C",
@@ -17,6 +18,48 @@ export default function MarkerText({ macro, updateMacro }) {
     });
   };
 
+  const handleBgFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const previousBgSrc = macro.bgSrc;
+    if (previousBgSrc) updateField("bgSrc", "");
+
+    const formData = new FormData();
+    formData.append("folder", "markertext");
+    formData.append("image", file);
+
+    const response = await fetch("http://localhost:3001/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      alert(result.error || "Upload failed");
+      return;
+    }
+
+    updateField("bgSrc", result.src);
+
+    if (previousBgSrc && !previousBgSrc.startsWith("data:")) {
+      const filename = previousBgSrc.replace(/^uploads\//, "");
+      fetch(`http://localhost:3001/upload/${filename}`, { method: "DELETE" }).catch(() => {});
+    }
+  };
+
+  const handleBgClear = () => {
+    const previousBgSrc = macro.bgSrc;
+    if (!previousBgSrc) return;
+
+    updateField("bgSrc", "");
+
+    if (!previousBgSrc.startsWith("data:")) {
+      const filename = previousBgSrc.replace(/^uploads\//, "");
+      fetch(`http://localhost:3001/upload/${filename}`, { method: "DELETE" }).catch(() => {});
+    }
+  };
+
   return (
     <div className="bg-white border border-[#CBE9F2] rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-[#CBE9F2]">
@@ -26,6 +69,63 @@ export default function MarkerText({ macro, updateMacro }) {
         </div>
 
         <div className="p-6 space-y-5">
+
+            {/* Background reference photo (preview only, never rendered) */}
+            <div>
+                <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#B07D4A] cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={macro.useRefPhoto ?? false}
+                        onChange={(e) => updateField("useRefPhoto", e.target.checked)}
+                    />
+                    Use reference photo?
+                </label>
+
+                {macro.useRefPhoto && (
+                    <div className="mt-2">
+                        {videoWidth && videoHeight && (
+                            <p className="text-xs text-[#6B6258] mb-1">
+                                For accurate placement, use a photo that matches the video's dimensions ({videoWidth}×{videoHeight}px).
+                            </p>
+                        )}
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-[#B07D4A] mb-2">
+                            Placement Reference Photo (preview only)
+                        </label>
+
+                        <div className="flex items-center gap-4">
+                            {macro.bgSrc && (
+                                <img
+                                    src={macro.bgSrc}
+                                    alt="Preview"
+                                    className="w-16 h-16 object-cover rounded-lg border border-[#CBE9F2]"
+                                />
+                            )}
+
+                            <label className="flex-1 cursor-pointer">
+                                <div className="px-3 py-2 border border-dashed border-[#CBE9F2] rounded-lg text-sm text-[#6B6258] text-center hover:border-[#09ACEC] transition">
+                                    {macro.bgSrc ? "Replace photo..." : "Click to upload a reference photo..."}
+                                </div>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleBgFileChange}
+                                    className="hidden"
+                                />
+                            </label>
+
+                            {macro.bgSrc && (
+                                <button
+                                    type="button"
+                                    onClick={handleBgClear}
+                                    className="px-3 py-2 text-sm text-[#B07D4A] hover:text-[#EE4266] transition"
+                                >
+                                    Clear
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* Text */}
             <div>
