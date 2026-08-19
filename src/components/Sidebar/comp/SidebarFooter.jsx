@@ -2,7 +2,7 @@ import { useState, lazy, Suspense } from "react";
 
 const PreviewPlayer = lazy(() => import("./PreviewPlayer"));
 
-export default function SidebarFooter({ activeMacro, macros, settings }) {
+export default function SidebarFooter({ activeMacro, macros, settings, updateMacro }) {
     const rawMacro = macros?.[activeMacro]?.macro;
     const [previewOpen, setPreviewOpen] = useState(false);
     const [renderStatus, setRenderStatus] = useState("idle"); // idle | rendering | done | error
@@ -119,7 +119,7 @@ export default function SidebarFooter({ activeMacro, macros, settings }) {
                                 </div>
                             }
                         >
-                            <PreviewPlayer activeMacro={activeMacro} rawMacro={rawMacro} settings={settings} />
+                            <PreviewPlayer activeMacro={activeMacro} rawMacro={rawMacro} settings={settings} updateMacro={updateMacro} />
                         </Suspense>
                     </div>
                 </div>

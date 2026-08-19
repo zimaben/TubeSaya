@@ -113,6 +113,7 @@ export default function App() {
         activeMacro={activeMacro}
         setActiveMacro={changeActiveMacro}
         settings={data.settings}
+        updateMacro={updateMacro}
       />
 
       <Dashboard

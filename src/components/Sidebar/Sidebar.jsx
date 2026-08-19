@@ -7,6 +7,7 @@ export default function Sidebar({
   activeMacro,
   setActiveMacro,
   settings,
+  updateMacro,
 }) {
   return (
     <div className="w-56 flex-shrink-0 bg-[#FFFFFF] rounded-2xl flex flex-col overflow-hidden">
@@ -32,7 +33,7 @@ export default function Sidebar({
         />
       </div>
 
-      <SidebarFooter activeMacro={activeMacro} macros={macros} settings={settings} />
+      <SidebarFooter activeMacro={activeMacro} macros={macros} settings={settings} updateMacro={updateMacro} />
     </div>
   );
 }
